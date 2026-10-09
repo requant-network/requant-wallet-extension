@@ -341,3 +341,36 @@ test("a lock request interrupts an in-flight pre-sign network check", async () =
   await engine.unlock({ password });
   assert.equal((await engine.state()).unlocked, true);
 });
+test("WASM generates fresh keys with secure randomness and password changes require a fresh backup", async () => {
+  const local = new Storage(),
+    session = new Storage(),
+    node = mockNode(core),
+    engine = new Engine({ local, session, core, node });
+  await assert.rejects(
+    engine.add({ name: "New fixture", password: "short" }),
+    /10 or more/,
+  );
+  const w = await engine.add({ name: "New unfunded fixture", password });
+  assert.match(w.address, /^trq1/);
+  assert.equal(w.backedUp, false);
+  await assert.rejects(
+    engine.plan({ recipient: fixture.recipient, amount: "1", fee: "0" }),
+    /backup/,
+  );
+  const backup = await engine.backup({ password });
+  assert.equal(
+    core("unlock", { encrypted: backup.encrypted, password }).meta.address,
+    w.address,
+  );
+  await engine.markBackup({ id: w.id });
+  assert.equal((await engine.state()).wallets[0].backedUp, true);
+  await engine.changePassword({
+    password,
+    nextPassword: "second-test-only-password",
+  });
+  assert.equal((await engine.state()).unlocked, false);
+  assert.equal((await engine.state()).wallets[0].backedUp, false);
+  await assert.rejects(engine.unlock({ password }), /Wrong/);
+  await engine.unlock({ password: "second-test-only-password" });
+  assert.equal((await engine.state()).wallets[0].address, w.address);
+});

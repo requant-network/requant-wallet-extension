@@ -6,7 +6,7 @@ Automated checks:
   exact uint64 monetary values, genesis rejection, input ownership/value/spent
   validation and signatures bound to the testnet chain domain. One test generates
   the public unfunded fixture used by the integration tests.
-- 12 JavaScript/WASM tests: actual compiled WASM, bundled service-worker routing,
+- 13 JavaScript/WASM tests: actual compiled WASM secure key generation, password-change/backup rules, bundled service-worker routing,
   trusted-only storage, forged internal commands, per-origin/document approvals,
   navigation invalidation, lock interruption before signing, immutable website
   requests, stale reviews and spent inputs, backup/onboarding tab persistence,
