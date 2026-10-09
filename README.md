@@ -1,0 +1,82 @@
+# Requant Wallet Extension
+
+A private Requant testnet wallet for **Chrome, Edge and Brave**, with an English
+interface in the Requant light identity. This is an early testnet release.
+Test RQT has no monetary value. This extension has not had an independent security audit.
+
+## Install
+
+1. Download `Requant-Wallet-Extension_0.1.0_chromium-testnet.zip` from this repository's Releases.
+2. Extract the ZIP to a permanent folder. Do not move or delete the folder while using the extension.
+3. Open `chrome://extensions` (Chrome), `edge://extensions` (Edge), or `brave://extensions` (Brave).
+4. Enable **Developer mode**, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
+5. Pin **Requant Wallet — Testnet** in the browser toolbar.
+6. Create a wallet and save its encrypted backup, or restore a backup from the Requant app.
+
+No Chrome Web Store submission has been made. Firefox, Safari and mobile browsers
+are outside this first version. The ZIP is the same on Windows, macOS and Linux.
+
+## What works
+
+- Local key generation and Argon2id/XChaCha20-Poly1305 encryption.
+- Restore encrypted Requant `.key` backups from the desktop/mobile app; export compatible backups.
+- Multiple wallets, password unlock, five-minute idle lock, password changes.
+- Live verified testnet status, exact RQT balances, history, receiving address and QR.
+- Confirmed-UTXO transfers with a full recipient/fee/total review and password confirmation.
+- Rechecks of unspent outputs and their source transaction hashes, values and owners before local Ed25519 signing.
+- A persistent broadcast record written before network submission; explicit pending/rejected/unknown results.
+- Per-site browser permissions, explicit connection approvals, transaction approvals and disconnection.
+- A Requant-specific `window.requant` provider. This wallet does not implement Ethereum RPC.
+
+Passwords and decrypted private keys are never persisted or sent to the network.
+Only the encrypted key, public wallet metadata, connected origins and signed broadcast
+records are in `chrome.storage.local`. It is restricted to trusted extension contexts.
+Unlock authorization and approval queues use trusted-only `chrome.storage.session`;
+browser restart locks the wallets. Signing decrypts a key locally inside Rust/WASM
+and requires the password again. JavaScript receives encrypted backups and signed
+transactions, never the raw secret key. WASM memory is zeroed for temporary secret
+buffers, but browser memory and password input buffers are not an audited secure enclave.
+
+The only node endpoint is `https://requant.network/wallet-api/v1/rpc`. The client
+checks the pinned testnet genesis. Monetary RPC numbers are decoded inside Rust
+and returned as strings, avoiding JavaScript Number precision loss. Node-supplied
+balances and confirmations still rely on the configured node; this is not an SPV client.
+
+New wallets must save a backup before sending. A password change requires a fresh
+backup; existing backup files keep their old passwords. Removing the extension or
+clearing browser data loses local wallets, so preserve your backup and password.
+
+## Connect a website
+
+Open the HTTPS site in a browser tab, open the wallet, and choose **Connect** →
+**Connect this website**. Approve access for that one site. Reload the page if needed.
+The selected public address is shared with the site; every transfer requires a new
+review and password. Revoke connections in **Settings → Connected websites**.
+
+See [provider API](docs/PROVIDER.md) and [security model](docs/SECURITY.md).
+
+## Development
+
+Requirements: Node 24, Rust 1.99.0 with `wasm32-unknown-unknown`, and the
+`wasm-bindgen-cli` version pinned in `crates/extension-core/Cargo.toml` (0.2.129).
+
+```sh
+npm ci
+cargo install wasm-bindgen-cli --version 0.2.129 --locked
+cargo test --locked -p requant-extension-core
+npm run build
+npm test
+npm run package
+```
+
+`dist/` is the unpacked production extension. `artifacts/` contains the install ZIP
+and checksums. GitHub Actions builds and tests the same bundle. Core tests generate
+an explicitly public, unfunded test fixture under ignored `target/`; integration
+tests mock the node and never submit a real transaction.
+
+For visual development: `npm run dev`, then open
+`http://127.0.0.1:3322/popup.html?preview`. This is labeled **DESIGN PREVIEW**,
+uses an unfunded fixture, and cannot create keys, export backups or send transactions.
+The preview is excluded from the production extension by the build.
+
+Pinned source provenance is in [vendor/PROVENANCE.md](vendor/PROVENANCE.md).

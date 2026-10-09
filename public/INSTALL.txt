@@ -1,0 +1,29 @@
+Requant Wallet Extension 0.1.0 — TESTNET
+
+Chrome / Edge / Brave on Windows, macOS and Linux
+
+1. Extract this ZIP into a permanent folder.
+2. Open chrome://extensions, edge://extensions, or brave://extensions.
+3. Enable Developer mode.
+4. Click Load unpacked and select this folder (the one containing manifest.json).
+5. Pin Requant Wallet — Testnet to the browser toolbar.
+6. Create a new wallet and save its encrypted backup, or restore an encrypted
+   .key backup from the Requant desktop or mobile app.
+
+Keep the backup and its password in separate safe places. Removing the extension
+or clearing browser storage deletes its local wallets. Do not move this folder
+after loading it. Existing backups retain their original passwords.
+
+To connect a website, open that HTTPS site, open the wallet, then choose
+Connect -> Connect this website. Grant permission for that one origin.
+Every transfer requires a separate review and wallet password confirmation.
+
+Requant has its own network and address format; this is not an Ethereum wallet.
+Test RQT has no monetary value. This is an early release without an independent
+security audit. No Chrome Web Store publication has been made.
+
+Private source and releases: https://github.com/Xaint00ship/requant-wallet-extension
+Project: https://requant.network
+
+Consensus and TNet source at danifest751/requant aad4772 is licensed under
+Apache-2.0. See THIRD-PARTY-LICENSE.txt. New application source remains private.

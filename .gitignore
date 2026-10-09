@@ -1,0 +1,14 @@
+node_modules/
+dist/
+target/
+pkg/
+.codegraph/
+.build-tools/
+.test-profile/
+artifacts/
+.env*
+*.key
+*.pem
+*.crx
+*.tsbuildinfo
+.DS_Store
