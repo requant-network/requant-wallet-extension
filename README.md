@@ -45,6 +45,8 @@ balances and confirmations still rely on the configured node; this is not an SPV
 New wallets must save a backup before sending. A password change requires a fresh
 backup; existing backup files keep their old passwords. Removing the extension or
 clearing browser data loses local wallets, so preserve your backup and password.
+Creation, restore and backup screens open in a full extension tab so a browser file
+dialog cannot close the popup and interrupt recovery or backup confirmation.
 
 ## Connect a website
 
@@ -54,6 +56,7 @@ The selected public address is shared with the site; every transfer requires a n
 review and password. Revoke connections in **Settings → Connected websites**.
 
 See [provider API](docs/PROVIDER.md) and [security model](docs/SECURITY.md).
+Release verification and remaining browser checks are recorded in [validation](docs/VALIDATION.md).
 
 ## Development
 

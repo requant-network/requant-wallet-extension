@@ -24,6 +24,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { call, preview } from "./api";
+import { initialPage, dedicatedPageUrl } from "./navigation.mjs";
 import { short, rqt } from "./amounts.mjs";
 import type { Wallet, State, Snapshot, Review, SiteRequest } from "./types";
 import "./style.css";
@@ -51,7 +52,9 @@ const empty: State = {
 function App() {
   const [state, setState] = useState<State>(empty),
     [loaded, setLoaded] = useState(false),
-    [page, setPage] = useState<Page>("home"),
+    [page, setPage] = useState<Page>(
+      () => initialPage(location.search) as Page,
+    ),
     [snapshot, setSnapshot] = useState<Snapshot>(),
     [nodeError, setNodeError] = useState(""),
     [error, setError] = useState(""),
@@ -111,6 +114,16 @@ function App() {
     }
   }
   const nav = (p: Page) => {
+    const target = dedicatedPageUrl(
+      p,
+      location.search,
+      globalThis.chrome?.runtime?.id ? chrome.runtime.getURL("") : "",
+      preview,
+    );
+    if (target) {
+      chrome.tabs.create({ url: target }).catch((e) => setError(e.message));
+      return;
+    }
     document.querySelector("main")?.scrollTo(0, 0);
     setPage(p);
     setError("");
@@ -274,7 +287,8 @@ function App() {
         </div>
         <form
           onSubmit={(e) => {
-            const f = fields(e);
+            const f = fields(e),
+              form = e.currentTarget;
             const input =
               e.currentTarget.querySelector<HTMLInputElement>(
                 "input[type=file]",
@@ -296,7 +310,7 @@ function App() {
                 password: f.password,
                 ...(encrypted ? { encrypted } : {}),
               });
-              e.currentTarget?.reset();
+              form.reset();
               nav(restoring ? "home" : "backup");
             });
           }}
