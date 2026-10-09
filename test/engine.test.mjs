@@ -238,7 +238,7 @@ test("website transfer is immutable, explicitly reviewed, rejected and revoked s
     4001,
   );
 });
-test("successful signedsendtx accepts exact acknowledgement; rejected results remain explicit", async () => {
+test("successful sendtx accepts exact acknowledgement; rejected results remain explicit", async () => {
   const { engine, node, session } = await setup();
   const p = await engine.plan({
     recipient: fixture.recipient,

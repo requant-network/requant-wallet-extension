@@ -441,8 +441,7 @@ export class Engine {
       rejected = false;
     try {
       accepted =
-        (await this.node.rpc("signedsendtx", [signed.hex])).result ===
-        signed.txid;
+        (await this.node.rpc("sendtx", [signed.hex])).result === signed.txid;
     } catch (e) {
       rejected = e.message === "The node rejected this request.";
     }

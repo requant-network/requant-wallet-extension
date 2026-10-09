@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import init, { invoke } from "../pkg/requant_extension_core.js";
+import { validateRequest } from "./gateway-contract.mjs";
 export const fixture = JSON.parse(
   (
     await readFile(
@@ -46,7 +47,8 @@ export function mockNode(core) {
     spent: false,
     fail: false,
     submitted: new Map(),
-    async rpc(method, params) {
+    async rpc(method, params = []) {
+      validateRequest({ method, params });
       let raw;
       if (method === "getinfo")
         raw = reply({
@@ -64,7 +66,7 @@ export function mockNode(core) {
         else if (node.submitted.has(params[0]))
           raw = reply({ hex: node.submitted.get(params[0]) });
         else throw new Error("The node rejected this request.");
-      } else if (method === "signedsendtx") {
+      } else if (method === "sendtx") {
         node.broadcasts++;
         if (node.disconnected)
           throw new Error("Node connection is unavailable.");
@@ -77,13 +79,13 @@ export function mockNode(core) {
     async info() {
       return core("info", {
         raw: (await node.rpc("getinfo")).raw,
-        genesis: (await node.rpc("getblock")).raw,
+        genesis: (await node.rpc("getblock", [0])).raw,
       });
     },
-    async snapshot() {
+    async snapshot(owner = fixture.metadata.owner) {
       return {
         ...core("snapshot", {
-          coinsRaw: (await node.rpc("utxos")).raw,
+          coinsRaw: (await node.rpc("utxos", [owner])).raw,
           historyRaw: reply([]),
         }),
         info: await node.info(),

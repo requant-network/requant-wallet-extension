@@ -6,12 +6,12 @@ Automated checks:
   exact uint64 monetary values, genesis rejection, input ownership/value/spent
   validation and signatures bound to the testnet chain domain. One test generates
   the public unfunded fixture used by the integration tests.
-- 11 JavaScript/WASM tests: actual compiled WASM, bundled service-worker routing,
+- 12 JavaScript/WASM tests: actual compiled WASM, bundled service-worker routing,
   trusted-only storage, forged internal commands, per-origin/document approvals,
   navigation invalidation, lock interruption before signing, immutable website
   requests, stale reviews and spent inputs, backup/onboarding tab persistence,
   exact acceptance/rejection/unknown broadcast outcomes, and bundled provider/bridge
-  request/response behavior.
+  request/response behavior and the pinned public gateway method contract.
 - TypeScript production build, Rust Clippy with warnings denied, and npm dependency audit.
 - A read-only check against the live requant.network testnet gateway using the
   public unfunded fixture: network/genesis match, valid status, zero balance and
