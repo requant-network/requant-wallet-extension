@@ -108,11 +108,11 @@ export class ExtensionUpdates {
     if (!offer.browserReady || offer.unpacked) return false;
     const state = await engine.state();
     if (state.requests.length || (state.unlocked && !explicit)) return false;
-    if (!explicit && this.browser.runtime.getContexts) {
+    if (this.browser.runtime.getContexts) {
       const contexts = await this.browser.runtime.getContexts({
         contextTypes: ["POPUP", "TAB"],
       });
-      if (contexts.length) return false;
+      if (contexts.length > (explicit ? 1 : 0)) return false;
     }
     engine.interruptLock();
     await engine.lock();

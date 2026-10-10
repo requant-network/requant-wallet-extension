@@ -31,7 +31,9 @@ const result = await window.requant.request({
 // { txid, status: 'pending' | 'rejected' | 'unknown', message }
 ```
 
-The wallet displays the browser-supplied origin, exact recipient, amount, fee,
+For HD wallets, `fee` is a maximum: the wallet estimates the network fee and rejects a payment above that limit. Legacy single-key wallets retain the original fixed-fee behavior.
+
+The wallet displays the browser-supplied origin, exact recipient, amount, actual fee,
 total and source wallet. It uses the submitted request unchanged and requires a
 password before signing. Reviews expire after two minutes; approval requests expire
 after five minutes. A request is invalidated when its top-level browser document
