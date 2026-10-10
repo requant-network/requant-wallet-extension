@@ -1,4 +1,24 @@
-# Version 0.1.0 testnet validation
+# Testnet validation
+
+## Version 0.2.1 — connection refresh
+
+- 17 JavaScript/WASM tests pass, including regression checks for recovery after
+  an initial node failure, deduplicated refreshes, synchronous request failures,
+  and cancellation of stale results after locking, wallet changes or popup closure.
+- TypeScript checks and the production extension build pass.
+- The production WASM and NodeClient were checked against the live HTTPS gateway
+  using an empty public owner and the published development-fund and faucet
+  addresses. Non-empty history (100 and 3 entries), balances, network and genesis
+  were read successfully. No private key was read and no transaction was sent.
+- The user's installed extension could not be inspected because browser access to
+  its current page was denied by the automation policy. The initial installed
+  error and an end-to-end reload still require confirmation in that browser.
+
+The fix addresses a verified UI bug: a failed first snapshot stayed Offline until
+a manual refresh or another unlock. It does not establish which initial request
+failed in the user's existing installation.
+
+## Version 0.1.0 baseline
 
 Automated checks:
 

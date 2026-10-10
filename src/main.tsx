@@ -1,4 +1,4 @@
-import React, { useEffect, useState, type FormEvent } from "react";
+import React, { useEffect, useRef, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
 import QRCode from "qrcode";
 import {
@@ -26,6 +26,7 @@ import {
 import { call, preview } from "./api";
 import { initialPage, dedicatedPageUrl } from "./navigation.mjs";
 import { short, rqt } from "./amounts.mjs";
+import { createSnapshotRefresh } from "./snapshot-refresh.mjs";
 import type { Wallet, State, Snapshot, Review, SiteRequest } from "./types";
 import "./style.css";
 import "./signal.css";
@@ -87,6 +88,9 @@ function App() {
     (w) =>
       w.id === (request?.type === "send" ? request.walletId : state.selected),
   );
+  const snapshotRefresh = useRef<ReturnType<
+    typeof createSnapshotRefresh
+  > | null>(null);
   async function refresh() {
     const s = await call<State>("state");
     setState(s);
@@ -94,13 +98,7 @@ function App() {
     return s;
   }
   async function loadSnapshot() {
-    try {
-      const s = await call<Snapshot>("snapshot");
-      setSnapshot(s);
-      setNodeError("");
-    } catch (e) {
-      setNodeError((e as Error).message);
-    }
+    await snapshotRefresh.current?.refresh();
   }
   async function run(fn: () => Promise<void>) {
     setBusy(true);
@@ -145,7 +143,23 @@ function App() {
   useEffect(() => {
     setSnapshot(undefined);
     setNodeError("");
-    if (state.unlocked && state.selected) loadSnapshot();
+    if (!state.unlocked || !state.selected) return;
+    const controller = createSnapshotRefresh({
+      load: () => call<Snapshot>("snapshot"),
+      onSnapshot: (s: Snapshot) => {
+        setSnapshot(s);
+        setNodeError("");
+      },
+      onError: (e: Error) =>
+        setNodeError(e.message || "Node connection is unavailable."),
+    });
+    snapshotRefresh.current = controller;
+    void controller.refresh();
+    return () => {
+      controller.dispose();
+      if (snapshotRefresh.current === controller)
+        snapshotRefresh.current = null;
+    };
   }, [state.unlocked, state.selected]);
   useEffect(() => {
     if (

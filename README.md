@@ -6,7 +6,7 @@ Test RQT has no monetary value. This extension has not had an independent securi
 
 ## Install
 
-1. Download `Requant-Wallet-Extension_0.1.0_chromium-testnet.zip` from this repository's Releases.
+1. Download `Requant-Wallet-Extension_0.2.1_chromium-testnet.zip` from this repository's Releases or [requant.network](https://requant.network/docs/wallet#download-wallet).
 2. Extract the ZIP to a permanent folder. Do not move or delete the folder while using the extension.
 3. Open `chrome://extensions` (Chrome), `edge://extensions` (Edge), or `brave://extensions` (Brave).
 4. Enable **Developer mode**, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
@@ -15,6 +15,17 @@ Test RQT has no monetary value. This extension has not had an independent securi
 
 No Chrome Web Store submission has been made. Firefox, Safari and mobile browsers
 are outside this first version. The ZIP is the same on Windows, macOS and Linux.
+
+To update an existing unpacked installation, extract the new ZIP into the same
+permanent folder, replacing its files, then click **Reload** on its card on the
+browser's Extensions page. Keep the existing installation and extension ID;
+removing it would remove its local wallet storage.
+
+Unlocking a wallet decrypts it locally; **Connected** means the extension has also
+received verified data from the testnet node. Version 0.2.1 retries failed node
+requests after five seconds and refreshes successful snapshots every thirty
+seconds while the unlocked popup or wallet tab is open. Clicking the connection
+status still refreshes immediately. These checks do not extend the idle lock.
 
 ## What works
 
