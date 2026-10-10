@@ -12,3 +12,5 @@ artifacts/
 *.crx
 *.tsbuildinfo
 .DS_Store
+
+pkg-browser/

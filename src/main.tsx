@@ -1,4 +1,4 @@
-import React, { useEffect, useState, type FormEvent } from "react";
+import React, { useEffect, useRef, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
 import QRCode from "qrcode";
 import {
@@ -26,8 +26,11 @@ import {
 import { call, preview } from "./api";
 import { initialPage, dedicatedPageUrl } from "./navigation.mjs";
 import { short, rqt } from "./amounts.mjs";
+import { createSnapshotRefresh } from "./snapshot-refresh.mjs";
+import WalletUpdates from "./WalletUpdates";
 import type { Wallet, State, Snapshot, Review, SiteRequest } from "./types";
 import "./style.css";
+import "./signal.css";
 type Page =
   | "home"
   | "receive"
@@ -86,6 +89,9 @@ function App() {
     (w) =>
       w.id === (request?.type === "send" ? request.walletId : state.selected),
   );
+  const snapshotRefresh = useRef<ReturnType<
+    typeof createSnapshotRefresh
+  > | null>(null);
   async function refresh() {
     const s = await call<State>("state");
     setState(s);
@@ -93,13 +99,7 @@ function App() {
     return s;
   }
   async function loadSnapshot() {
-    try {
-      const s = await call<Snapshot>("snapshot");
-      setSnapshot(s);
-      setNodeError("");
-    } catch (e) {
-      setNodeError((e as Error).message);
-    }
+    await snapshotRefresh.current?.refresh();
   }
   async function run(fn: () => Promise<void>) {
     setBusy(true);
@@ -120,6 +120,10 @@ function App() {
       globalThis.chrome?.runtime?.id ? chrome.runtime.getURL("") : "",
       preview,
     );
+    if (p === "create" || p === "restore") {
+      void chrome.tabs.create({ url: chrome.runtime.getURL("full.html") });
+      return;
+    }
     if (target) {
       chrome.tabs.create({ url: target }).catch((e) => setError(e.message));
       return;
@@ -144,7 +148,23 @@ function App() {
   useEffect(() => {
     setSnapshot(undefined);
     setNodeError("");
-    if (state.unlocked && state.selected) loadSnapshot();
+    if (!state.unlocked || !state.selected) return;
+    const controller = createSnapshotRefresh({
+      load: () => call<Snapshot>("snapshot"),
+      onSnapshot: (s: Snapshot) => {
+        setSnapshot(s);
+        setNodeError("");
+      },
+      onError: (e: Error) =>
+        setNodeError(e.message || "Node connection is unavailable."),
+    });
+    snapshotRefresh.current = controller;
+    void controller.refresh();
+    return () => {
+      controller.dispose();
+      if (snapshotRefresh.current === controller)
+        snapshotRefresh.current = null;
+    };
   }, [state.unlocked, state.selected]);
   useEffect(() => {
     if (
@@ -215,7 +235,7 @@ function App() {
   const footer = (
     <div className="trust">
       <ShieldCheck size={13} /> Local keys. Your confirmation.
-      <span>v0.1.0</span>
+      <span>v0.3.0</span>
     </div>
   );
   const errorBox = error && (
@@ -662,7 +682,9 @@ function App() {
               </small>
             </label>
             <label>
-              Network fee (RQT)
+              {wallet && "hdFile" in wallet
+                ? "Maximum network fee (RQT)"
+                : "Network fee limit (RQT)"}
               <input
                 name="fee"
                 inputMode="decimal"
@@ -956,6 +978,9 @@ function App() {
           </h1>
           <p>Local storage. Explicit permission.</p>
         </div>
+        <WalletUpdates
+          blocked={busy || !!request || state.requests.length > 0}
+        />
         <div className="card settings-list">
           <button onClick={() => nav("backup")}>
             <ShieldCheck size={18} />
@@ -1291,6 +1316,27 @@ function App() {
         </div>
       )}
       <main>
+        {!requestParam && (
+          <a
+            className="primary full"
+            href="full.html"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open full wallet · Recovery phrase, addresses & offline signing
+          </a>
+        )}
+        {page !== "settings" && (
+          <WalletUpdates
+            compact
+            blocked={
+              busy ||
+              !!request ||
+              state.requests.length > 0 ||
+              !["home", "activity", "receive"].includes(page)
+            }
+          />
+        )}
         {errorBox}
         {content}
         {nodeError && state.unlocked && (

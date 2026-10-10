@@ -3,5 +3,8 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   base: "./",
-  build: { rollupOptions: { input: "popup.html" } },
+  build: {
+    target: "esnext",
+    rollupOptions: { input: ["popup.html", "full.html"] },
+  },
 });

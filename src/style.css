@@ -1,7 +1,7 @@
 :root {
   font-family: Arial, Helvetica, sans-serif;
-  color: #171717;
-  background: #f2efe8;
+  color: #20231f;
+  background: #f4f1e9;
   font-synthesis: none;
   font-size: 14px;
 }
@@ -88,7 +88,7 @@ code {
 .shell {
   width: 400px;
   min-height: 600px;
-  background: #f2efe8;
+  background: #f4f1e9;
   display: flex;
   flex-direction: column;
   margin: auto;
@@ -241,7 +241,7 @@ main {
 }
 .balance-card {
   padding: 23px 20px 18px;
-  background: #fbfaf7;
+  background: #ffffff;
   border: 1px solid #e2dfd6;
   border-radius: 16px;
   box-shadow: 0 8px 28px #2a231909;
@@ -258,9 +258,9 @@ main {
   border: 1px solid #ff542612;
   transform: rotate(32deg);
   box-shadow:
-    10px 10px 0 -1px #fbfaf7,
+    10px 10px 0 -1px #ffffff,
     10px 10px 0 0 #ff542611,
-    20px 20px 0 -1px #fbfaf7,
+    20px 20px 0 -1px #ffffff,
     20px 20px 0 0 #ff542610;
   pointer-events: none;
 }
@@ -297,7 +297,7 @@ main {
 }
 .balance-actions button {
   flex: 1;
-  background: #f2efe8;
+  background: #f4f1e9;
   border-radius: 10px;
   min-height: 64px;
   display: flex;
@@ -379,7 +379,7 @@ main {
 }
 .card {
   padding: 18px;
-  background: #fbfaf7;
+  background: #ffffff;
   border: 1px solid #e2dfd6;
   border-radius: 12px;
   margin-bottom: 16px;
@@ -444,7 +444,7 @@ main {
   background: #f1491d;
 }
 .secondary {
-  background: #fbfaf7;
+  background: #ffffff;
   border: 1px solid #dcd7cc;
   color: #474239;
 }
@@ -500,7 +500,7 @@ input,
 textarea {
   border: 1px solid #ddd7cb;
   border-radius: 9px;
-  background: #fbfaf7;
+  background: #ffffff;
   padding: 13px 14px;
   min-height: 44px;
   color: #292620;
@@ -593,7 +593,7 @@ form .note {
   min-height: 246px;
   border-radius: 16px;
   border: 1px solid #e1dbcf;
-  background: #fbfaf7;
+  background: #ffffff;
   margin: 0 auto 20px;
   display: flex;
   align-items: center;
@@ -621,7 +621,7 @@ form .note {
   margin-top: 11px;
 }
 .review-amount {
-  background: #fbfaf7;
+  background: #ffffff;
   border: 1px solid #e2dfd6;
   border-radius: 12px;
   padding: 22px;
@@ -703,7 +703,7 @@ form .note {
   padding: 17px;
   border: 1px solid #e1d8c7;
   border-radius: 10px;
-  background: #fbfaf7;
+  background: #ffffff;
 }
 .account-card > div {
   flex: 1;
@@ -937,7 +937,7 @@ nav button:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 5px solid #f2efe8;
+  border: 5px solid #f4f1e9;
   background: #e9e1d3;
   width: 50px;
   height: 50px;

@@ -1,0 +1,251 @@
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-400.ttf") format("truetype");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-500.ttf") format("truetype");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-700.ttf") format("truetype");
+}
+
+/* Signal: the same type, surfaces and status language as the web wallet. */
+:root {
+  font-family: "IBM Plex Sans", sans-serif;
+  color: #20231f;
+  background: #f4f1e9;
+  font-size: 14px;
+}
+body {
+  min-width: 360px;
+}
+.shell {
+  background: #f4f1e9;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.9px;
+}
+h2 {
+  font-size: 19px;
+  letter-spacing: -0.4px;
+}
+header {
+  background: #f8f7f3;
+  border-color: #e4e4df;
+}
+.brand > span {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.brand small {
+  color: #717786;
+  letter-spacing: 1px;
+  font-weight: 400;
+}
+.badge {
+  background: #edf5ef;
+  color: #315840;
+  border: 0;
+  font-weight: 500;
+  padding: 7px 11px;
+}
+.icon {
+  border-radius: 6px;
+}
+.icon:hover {
+  background: #edede7;
+}
+.wallet-bar {
+  background: #f8f7f3;
+  border-bottom: 1px solid #e4e4df;
+}
+.wallet-bar select {
+  font-size: 13px;
+  font-weight: 500;
+}
+.node-status {
+  font-size: 11px;
+  color: #717786;
+}
+.node-status.online {
+  color: #3b7651;
+}
+.eyebrow {
+  color: #717786;
+  letter-spacing: 1.1px;
+  font-weight: 500;
+}
+.symbol {
+  border-radius: 6px;
+  background: #fff0e8;
+}
+.balance-card,
+.card,
+.address-card,
+.account-card,
+.site-box {
+  background: #fff;
+  border: 1px solid #e4e4df;
+  border-radius: 6px;
+  box-shadow: none;
+}
+.balance-card:before {
+  display: none;
+}
+.balance {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+.balance.compact {
+  font-size: 26px;
+}
+.balance > span {
+  font-family: inherit;
+  color: #717786;
+  font-weight: 400;
+}
+.balance-caption {
+  font-size: 10px;
+  color: #717786;
+}
+.balance-actions button {
+  border: 1px solid #e4e4df;
+  color: #41444b;
+  background: #fafaf8;
+  border-radius: 6px;
+}
+.balance-grid {
+  border-color: #e4e4df;
+}
+.balance-grid strong,
+.review-amount {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.button,
+.primary,
+.secondary,
+input,
+textarea,
+select {
+  border-radius: 6px;
+}
+input,
+textarea,
+select {
+  border-color: #e4e4df;
+  background: #fff;
+  color: #20231f;
+}
+.note,
+.alert,
+.backup-banner,
+.requests > a {
+  border-radius: 6px;
+}
+.note {
+  background: #faf8f2;
+  border-color: #e4e4df;
+  color: #717786;
+}
+.backup-banner {
+  background: #fff6eb;
+  border-color: #f2e2cf;
+}
+.settings-list button {
+  color: #717786;
+  border-color: #e4e4df;
+}
+.settings-list button > span {
+  color: #20231f;
+  font-size: 13px;
+  font-weight: 500;
+}
+.activity-row,
+.connection {
+  border-color: #e4e4df;
+}
+.tx-icon {
+  background: #f4f4ef;
+  color: #717786;
+  border-radius: 6px;
+}
+.qr {
+  border-radius: 6px;
+  border-color: #e4e4df;
+  background: #fff;
+}
+.qr:after {
+  display: none;
+}
+nav {
+  background: #fff;
+  border-color: #e4e4df;
+  padding: 8px 16px;
+}
+nav button {
+  color: #717786;
+  font-size: 11px;
+  font-weight: 400;
+  border-radius: 6px;
+}
+nav button.active {
+  color: #d73d13;
+  background: #fff0e8;
+  font-weight: 500;
+}
+nav button:hover {
+  background: #f4f4ef;
+}
+.trust {
+  color: #717786;
+  background: #f8f7f3;
+  border-color: #e4e4df;
+  font-size: 10px;
+}
+.welcome-art img {
+  transform: none;
+}
+.orbit {
+  border-color: #e4e4df;
+  border-radius: 6px;
+  transform: rotate(30deg);
+}
+.orbit.two {
+  border-style: solid;
+  border-radius: 6px;
+}
+.locked-art span {
+  background: #f0eee6;
+  color: #717786;
+}
+@media (min-width: 600px) {
+  .shell {
+    border-color: #e4e4df;
+    border-radius: 6px;
+    box-shadow: 0 16px 50px #20231f08;
+  }
+}
+@media (max-width: 399px) {
+  .shell {
+    width: 100%;
+    min-width: 360px;
+  }
+}

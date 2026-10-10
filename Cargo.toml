@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/extension-core", "vendor/consensus", "vendor/tnet"]
+members = ["crates/extension-core", "crates/browser-core", "vendor/wallet", "vendor/consensus", "vendor/tnet"]
 default-members = ["crates/extension-core"]
 
 [profile.release]

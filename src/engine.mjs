@@ -128,6 +128,7 @@ export class Engine {
     local,
     session,
     core,
+    fullCore,
     node,
     now = Date.now,
     openApproval = async () => {},
@@ -137,6 +138,7 @@ export class Engine {
       local,
       session,
       core,
+      fullCore,
       node,
       now,
       openApproval,
@@ -168,6 +170,7 @@ export class Engine {
   }
   async save(db) {
     await this.local.set({ db });
+    await this.fullState?.sync(db);
   }
   async sessions() {
     return (
@@ -194,7 +197,7 @@ export class Engine {
       throw new WalletError("Wallet is locked. Unlock it to continue.", 4100);
   }
   public(w) {
-    const { encrypted, ...safe } = w;
+    const { encrypted, hdFile, ...safe } = w;
     return safe;
   }
   async sweep() {
@@ -274,6 +277,22 @@ export class Engine {
     const generation = this.lockGeneration;
     const db = await this.db(),
       w = this.wallet(db);
+    if (w.hdFile) {
+      const result = this.fullCore("import", { file: w.hdFile, password });
+      if (result.meta.watchOnly)
+        throw new WalletError(
+          "Watch-only wallets cannot authorize website signing.",
+        );
+      if (result.meta.address !== w.address)
+        throw new WalletError("Wallet metadata mismatch.");
+      const s = await this.sessions();
+      if (generation !== this.lockGeneration)
+        throw new WalletError("Wallet was locked.");
+      this.forceLocked = false;
+      s.unlocks[w.id] = this.now() + LOCK_MS;
+      await this.saveSession(s);
+      return true;
+    }
     const result = this.core("unlock", { encrypted: w.encrypted, password });
     if (
       result.meta.owner !== w.owner ||
@@ -319,6 +338,12 @@ export class Engine {
       w = this.wallet(db),
       s = await this.sessions();
     this.access(s, w.id);
+    if (w.hdFile) {
+      const m = this.fullCore("import", { file: w.hdFile, password }).meta;
+      if (m.address !== w.address)
+        throw new WalletError("Wallet metadata mismatch.");
+      return { id: w.id, encrypted: w.hdFile, address: w.address };
+    }
     const m = this.core("unlock", { encrypted: w.encrypted, password }).meta;
     if (m.owner !== w.owner) throw new WalletError("Wallet metadata mismatch.");
     return { id: w.id, encrypted: w.encrypted, address: w.address };
@@ -337,6 +362,18 @@ export class Engine {
       w = this.wallet(db),
       s = await this.sessions();
     this.access(s, w.id);
+    if (w.hdFile) {
+      const result = this.fullCore("changePassword", {
+        file: w.hdFile,
+        password,
+        nextPassword,
+      });
+      w.hdFile = result.file;
+      w.backedUp = false;
+      await this.save(db);
+      await this.lock();
+      return true;
+    }
     const r = this.core("changePassword", {
       encrypted: w.encrypted,
       password,
@@ -355,7 +392,9 @@ export class Engine {
       s = await this.sessions(),
       w = this.wallet(db);
     this.access(s, w.id);
-    const snapshot = await this.node.snapshot(w.owner);
+    const snapshot = w.hdFile
+      ? await this.hdSnapshot(w)
+      : await this.node.snapshot(w.owner);
     this.access(await this.sessions(), w.id);
     return snapshot;
   }
@@ -372,6 +411,8 @@ export class Engine {
     this.access(s, w.id);
     if (!w.backedUp)
       throw new WalletError("Save an encrypted backup before sending.");
+    if (w.hdFile)
+      return this.hdPlan(db, s, w, { recipient, amount, fee, requestId });
     const info = await this.node.info(),
       c = await this.node.rpc("utxos", [w.owner]);
     const plan = this.core("plan", { coinsRaw: c.raw, recipient, amount, fee });
@@ -408,6 +449,7 @@ export class Engine {
       w = this.wallet(db, p.walletId);
     if (!w.backedUp)
       throw new WalletError("Save an encrypted backup before sending.");
+    if (w.hdFile && p.unsigned) return this.hdSend(db, s, w, p, password);
     const info = await this.node.info(),
       fresh = await this.node.rpc("utxos", [w.owner]),
       parents = await this.node.parents(p.review);
@@ -488,6 +530,200 @@ export class Engine {
     await this.save(db);
     return true;
   }
+  async hdSnapshot(w) {
+    const info = await this.node.info(),
+      meta = this.fullCore("metadata", { file: w.hdFile });
+    const all = [],
+      events = new Map();
+    let confirmed = 0n,
+      pending = 0n,
+      maturing = 0n;
+    const batches = [];
+    for (let start = 0; start < meta.addresses.length; start += 200) {
+      const owners = meta.addresses
+        .slice(start, start + 200)
+        .map((a) => a.owner);
+      const [coins, history] = await Promise.all([
+        this.node.rpc("utxos", [owners]),
+        this.node.rpc("history", [owners, 200]),
+      ]);
+      const c = this.fullCore("rpc", { raw: coins.raw }),
+        h = this.fullCore("rpc", { raw: history.raw });
+      if (
+        !Array.isArray(c) ||
+        !Array.isArray(h) ||
+        [...c, ...h].some((x) => !owners.includes(x.owner))
+      )
+        throw new WalletError("Invalid wallet address response.");
+      for (const owner of owners)
+        batches.push({
+          owner,
+          raw: JSON.stringify({
+            result: c.filter((x) => x.owner === owner),
+            error: null,
+          }),
+        });
+      for (const coin of c) {
+        const value = BigInt(coin.value);
+        if (value <= 0n || value > 2n ** 63n)
+          throw new WalletError("Invalid output amount.");
+        if (coin.confirmed && coin.spendable) confirmed += value;
+        else if (!coin.confirmed) pending += value;
+        else maturing += value;
+        all.push(coin);
+      }
+      for (const e of h) {
+        const old = events.get(e.txid);
+        events.set(e.txid, {
+          ...e,
+          received: String(
+            BigInt(e.received) + (old ? BigInt(old.received) : 0n),
+          ),
+          sent: String(BigInt(e.sent) + (old ? BigInt(old.sent) : 0n)),
+        });
+      }
+    }
+    if ((await this.node.info()).tip !== info.tip)
+      throw new WalletError("The chain changed. Refresh your wallet.");
+    if (confirmed + pending + maturing > 2n ** 63n)
+      throw new WalletError("Wallet balance overflow.");
+    const format = (n) =>
+      `${n / 100000000n}.${String(n % 100000000n).padStart(8, "0")}`;
+    return {
+      confirmed: format(confirmed),
+      spendable: format(confirmed),
+      pending: format(pending),
+      maturing: format(maturing),
+      events: [...events.values()],
+      coins: all,
+      coinBatches: batches,
+      info,
+      observedAt: this.now(),
+    };
+  }
+  async hdPlan(db, s, w, { recipient, amount, fee, requestId }) {
+    const snapshot = await this.hdSnapshot(w);
+    let rate = 5;
+    try {
+      const r = await this.node.rpc("estimatefee", [3]);
+      const n = Number(r.result.feerate ?? r.result.rate);
+      if (Number.isInteger(n) && n > 0 && n <= 1000000) rate = n;
+    } catch {}
+    const args = {
+      file: w.hdFile,
+      coins: snapshot.coinBatches,
+      payments: [{ address: recipient, amount }],
+      rate,
+    };
+    const selected = this.fullCore("plan", args),
+      parents = {};
+    for (const input of selected.inputs)
+      if (!parents[input.txid])
+        parents[input.txid] = (await this.node.rpc("gettx", [input.txid])).raw;
+    const result = this.fullCore("plan", { ...args, parents });
+    const atoms = (value) => {
+      if (!/^\d+(\.\d{1,8})?$/.test(value))
+        throw new WalletError("Invalid fee amount.");
+      const [a, b = ""] = value.split(".");
+      return BigInt(a) * 100000000n + BigInt(b.padEnd(8, "0"));
+    };
+    if (atoms(result.review.fee) > atoms(fee))
+      throw new WalletError(
+        "The estimated network fee exceeds the requested fee limit.",
+      );
+    if ((await this.node.info()).tip !== snapshot.info.tip)
+      throw new WalletError("The chain changed. Review again.");
+    const fresh = await this.sessions();
+    this.access(fresh, w.id);
+    if (requestId) await this.request(fresh, requestId);
+    w.hdFile = result.file;
+    await this.save(db);
+    const id = uuid(),
+      review = { ...result.review, recipient, inputs: result.inputs };
+    fresh.plans[id] = {
+      id,
+      walletId: w.id,
+      unsigned: result.unsigned,
+      inputs: result.inputs,
+      review,
+      requestId,
+      created: this.now(),
+    };
+    await this.saveSession(fresh);
+    return { id, ...review, address: w.address, walletName: w.name };
+  }
+  async hdSend(db, s, w, p, password) {
+    const snapshot = await this.hdSnapshot(w);
+    for (const i of p.inputs)
+      if (
+        !snapshot.coins.some(
+          (c) =>
+            c.txid === i.txid &&
+            Number(c.vout) === i.vout &&
+            c.owner === i.owner &&
+            c.value === i.value &&
+            c.confirmed &&
+            c.spendable,
+        )
+      )
+        throw new WalletError("A selected coin changed. Review again.");
+    s = await this.sessions();
+    this.access(s, w.id);
+    if (p.created + REVIEW_MS <= this.now() || !s.plans[p.id])
+      throw new WalletError("Transfer review expired.");
+    if (p.requestId) await this.request(s, p.requestId);
+    const signed = this.fullCore("sign", {
+      file: w.hdFile,
+      unsigned: p.unsigned,
+      password,
+    });
+    const entry = {
+      hex: signed.hex,
+      txid: signed.txid,
+      walletId: w.id,
+      status: "unknown",
+      created: this.now(),
+    };
+    db.outbox.push(entry);
+    db.outbox = db.outbox.slice(-100);
+    await this.save(db);
+    delete s.plans[p.id];
+    await this.saveSession(s);
+    let accepted = false,
+      rejected = false;
+    try {
+      accepted =
+        (await this.node.rpc("sendtx", [signed.hex])).result === signed.txid;
+    } catch (e) {
+      rejected = e.message === "The node rejected this request.";
+    }
+    if (!accepted)
+      try {
+        accepted =
+          (await this.node.rpc("gettx", [signed.txid])).result.hex ===
+          signed.hex;
+      } catch {}
+    entry.status = accepted ? "pending" : rejected ? "rejected" : "unknown";
+    await this.save(db);
+    const result = {
+      txid: signed.txid,
+      status: entry.status,
+      message: accepted
+        ? "Transfer submitted. Waiting for confirmation."
+        : "Broadcast result is unknown or rejected. Check this transaction before sending again.",
+    };
+    if (p.requestId) {
+      s = await this.sessions();
+      const r = s.requests[p.requestId];
+      if (r) {
+        r.done = true;
+        r.result = result;
+        await this.saveSession(s);
+      }
+    }
+    return result;
+  }
+
   async grantOrigin(origin) {
     const db = await this.db(),
       s = await this.sessions(),

@@ -40,10 +40,14 @@ globalThis.chrome = {
   },
 };
 globalThis.fetch = async (target, options) => {
-  if (target === url + "requant_extension_core_bg.wasm")
+  if (
+    ["requant_extension_core_bg.wasm", "requant_browser_core_bg.wasm"].some(
+      (name) => target === url + name,
+    )
+  )
     return new Response(
       await readFile(
-        new URL("../dist/requant_extension_core_bg.wasm", import.meta.url),
+        new URL("../dist/" + target.slice(url.length), import.meta.url),
       ),
       { headers: { "Content-Type": "application/wasm" } },
     );
@@ -119,4 +123,21 @@ test("bundled MV3 worker protects storage, handles wallet UI and rejects forged 
       .result,
     [],
   );
+});
+
+test("full wallet bridge is restricted to exact extension pages", async () => {
+  for (const action of [
+    "fullCore",
+    "fullStateLoad",
+    "fullStateSave",
+    "fullRpc",
+  ]) {
+    const reply = await message(action, {}, site);
+    assert.equal(reply.ok, false);
+    assert.match(reply.error.message, /Unauthorized/);
+  }
+  const full = { id: "test-extension", url: url + "full.html" };
+  assert.equal((await message("fullStateLoad", {}, full)).ok, true);
+  const lookalike = { id: "test-extension", url: url + "full.html.evil" };
+  assert.equal((await message("fullStateLoad", {}, lookalike)).ok, false);
 });
