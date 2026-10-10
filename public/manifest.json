@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Requant Wallet — Testnet",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Your Requant testnet wallet. Create, restore, receive, send and connect to websites with local signing.",
   "minimum_chrome_version": "120",
   "action": {"default_popup":"popup.html","default_title":"Requant Wallet","default_icon":{"16":"icons/16.png","32":"icons/32.png","48":"icons/48.png","128":"icons/128.png"}},

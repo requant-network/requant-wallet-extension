@@ -28,6 +28,7 @@ import { initialPage, dedicatedPageUrl } from "./navigation.mjs";
 import { short, rqt } from "./amounts.mjs";
 import type { Wallet, State, Snapshot, Review, SiteRequest } from "./types";
 import "./style.css";
+import "./signal.css";
 type Page =
   | "home"
   | "receive"
@@ -215,7 +216,7 @@ function App() {
   const footer = (
     <div className="trust">
       <ShieldCheck size={13} /> Local keys. Your confirmation.
-      <span>v0.1.0</span>
+      <span>v0.2.0</span>
     </div>
   );
   const errorBox = error && (
