@@ -1,7 +1,7 @@
 # Pinned source
 
 `consensus/` and `tnet/` are unmodified Apache-2.0 sources from
-https://github.com/requant-network/requant at `444da68` (node 0.15.0: spending conditions and time locks; earlier pinned at `aad4772`).
+https://github.com/requant-network/requant at `ef789d4` (node 0.16.0: revocable outputs and anyone-can-pay; earlier pinned at `444da68` and `aad4772`).
 
 `crates/extension-core/src/crypto.rs` and `transfer.rs` are copied unchanged from
 https://github.com/Xaint00ship/requant-wallet at
