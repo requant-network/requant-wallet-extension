@@ -327,6 +327,67 @@ mod tests {
         let falseplan=call("plan",json!({"recipient":recipient,"amount":"1","fee":"0","coinsRaw":reply(json!([falsecoin]))})).unwrap();
         assert!(call("verifyParents",json!({"sealed":falseplan["sealed"],"owner":owner,"parents":{tid:reply(json!({"hex":hex::encode(parent.encode())}))}})).is_err());
     }
+    /// A coin created by a kind-2 transfer (spending conditions and time locks, Requant node 0.15.0)
+    /// is verified and spent like any other: the pinned consensus decodes and checks its source.
+    #[test]
+    fn signs_a_coin_whose_source_spent_a_condition_or_time_lock() {
+        use requant_consensus::tx::{Htlc, Input, OutPoint, Unlock};
+        let key = [7; 32];
+        let owner = meta(&key)["owner"].as_str().unwrap().to_owned();
+        let other = SigningKey::from_bytes(&[9; 32]);
+        let htlc = Htlc {
+            hash: [1; 32],
+            claim: [2; 32],
+            refund: pkh(&other.verifying_key().to_bytes()),
+            timeout: 1500,
+        };
+        let mut parent = Tx::Transfer {
+            inputs: vec![
+                Input {
+                    after_height: 1500,
+                    unlock: Unlock::HtlcRefund { htlc },
+                    ..Input::new(OutPoint {
+                        txid: [3; 32],
+                        vout: 0,
+                    })
+                },
+                Input {
+                    after_blocks: 10,
+                    ..Input::new(OutPoint {
+                        txid: [3; 32],
+                        vout: 1,
+                    })
+                },
+            ],
+            outputs: vec![requant_consensus::tx::Output {
+                value: 500_000_000,
+                pkh: pkh(&SigningKey::from_bytes(&key).verifying_key().to_bytes()),
+            }],
+        };
+        parent.sign(&Network::test().chain_id, &[&other, &other]);
+        assert!(parent.is_v2());
+        assert_eq!(parent.encode()[4], 2, "a kind-2 transfer");
+        let tid = hex::encode(parent.txid());
+        let c = Coin {
+            txid: tid.clone(),
+            vout: 0,
+            value: 500_000_000,
+            confirmed: true,
+            spendable: true,
+            coinbase: false,
+            height: Some(1500),
+        };
+        let recipient = meta(&[8; 32])["address"].as_str().unwrap().to_owned();
+        let plan = call(
+            "plan",
+            json!({"recipient":recipient,"amount":"1","fee":"0.0001","coinsRaw":reply(json!([c]))}),
+        )
+        .unwrap();
+        let input = json!({"sealed":plan["sealed"],"owner":owner,"parents":{tid:reply(json!({"hex":hex::encode(parent.encode())}))},"freshRaw":reply(json!([c])),"encrypted":crypto::encrypt(&key,"test-only-no-funds-password").unwrap(),"password":"test-only-no-funds-password"});
+        let signed = call("sign", input).unwrap();
+        let tx = Tx::decode_exact(&hex::decode(signed["hex"].as_str().unwrap()).unwrap()).unwrap();
+        assert!(tx.check_standalone(&Network::test().chain_id).is_ok());
+    }
     #[test]
     fn emit_public_unfunded_integration_fixture() {
         let key = [7; 32];
