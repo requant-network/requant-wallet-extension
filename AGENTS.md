@@ -4,7 +4,7 @@
 - Use the approved Requant ivory, graphite and orange identity and the authoritative SVG mark.
 - This is the Requant testnet, not an Ethereum wallet. Expose `window.requant`, never `window.ethereum`.
 - Sign locally using the pinned consensus rules. Never transmit a password, key or encrypted backup.
-- Only encrypted key files are supported. Do not invent a mnemonic recovery format.
+- Support the pinned wallet 0.5.0 encrypted HD/24-word recovery format, watch-only files and legacy encrypted key files. Preserve existing encrypted backups.
 - Keep secrets, browser profiles, test backups and release artifacts outside Git.
 - Amounts are exact uint64 atoms with eight RQT decimals. Never parse RPC monetary values through JavaScript Number.
 - Validate genesis, recipient, selected fresh UTXOs and complete source transaction bytes before signing.

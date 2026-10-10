@@ -2,7 +2,7 @@
   "repository": "https://github.com/requant-network/requant-wallet",
   "interface": "web/src",
   "core": "crates/browser-core",
-  "upstreamWallet": "a1e89b93c99de10788da0e698d14fc18ff1ec356",
-  "version": "0.3.0",
-  "sourceCommit": "004e5cf"
+  "upstreamWallet": "ef789d4e71197e7e32166611aac57ca1578769cd",
+  "version": "0.4.0",
+  "sourceCommit": "8fd6b2c10c207bab95ed3c24284c1b63c5f7684b"
 }

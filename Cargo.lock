@@ -407,11 +407,12 @@ dependencies = [
 
 [[package]]
 name = "requant-wallet-portable"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "argon2",
  "chacha20poly1305",
  "ed25519-dalek",
+ "hex",
  "requant-consensus",
  "serde_json",
  "sha2",

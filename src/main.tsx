@@ -235,7 +235,7 @@ function App() {
   const footer = (
     <div className="trust">
       <ShieldCheck size={13} /> Local keys. Your confirmation.
-      <span>v0.3.0</span>
+      <span>v0.4.0</span>
     </div>
   );
   const errorBox = error && (

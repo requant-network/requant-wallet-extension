@@ -95,6 +95,6 @@ The preview is excluded from the production extension by the build.
 
 Pinned source provenance is in [vendor/PROVENANCE.md](vendor/PROVENANCE.md).
 
-## Full wallet workspace / 0.3.0
+## Full wallet workspace / 0.4.0
 
 Open full wallet from the popup to use the shared Signal interface: 24-word creation/restoration, encrypted/watch-only files, legacy key import, multiple receive/change addresses and count/deposit exports, coins/history/transaction detail, multiple recipients, max/consolidation and offline prepare/sign/broadcast. The full wallet and popup share trusted Chrome storage; existing legacy keys are preserved. Website accounts remain bound to their wallet and original tab/document. HD website payments estimate a fee and enforce the website's requested `fee` as a maximum; the actual fee is reviewed before signing. Watch-only wallets cannot unlock website signing. Desktop/mobile update behavior is documented in the wallet repository; ZIP extensions require manual replacement and Reload.
