@@ -78,3 +78,9 @@ test("browser updates never reload unpacked wallets, active signing sessions or 
     assert.equal(locked, installType === "normal" ? 1 : 0);
   }
 });
+test("explicit installation waits for other wallet pages to close",async()=>{
+ const f=fixture("normal"),updates=new ExtensionUpdates(f.browser);await updates.browserAvailable({version:"0.3.1"});
+ let locked=0;const engine={state:async()=>({unlocked:true,requests:[]}),interruptLock(){},lock:async()=>{locked++;}};
+ f.browser.runtime.getContexts=async()=>[{},{}];assert.equal(await updates.apply(engine,true),false);assert.equal(locked,0);
+ f.browser.runtime.getContexts=async()=>[{}];assert.equal(await updates.apply(engine,true),true);assert.equal(locked,1);
+});
