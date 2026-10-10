@@ -388,6 +388,79 @@ mod tests {
         let tx = Tx::decode_exact(&hex::decode(signed["hex"].as_str().unwrap()).unwrap()).unwrap();
         assert!(tx.check_standalone(&Network::test().chain_id).is_ok());
     }
+    /// A coin created by a transfer that uses the templates of Requant node 0.16.0 (a revocable output
+    /// spent with anyone-can-pay, a revocable HTLC claim) is verified and spent like any other.
+    #[test]
+    fn signs_a_coin_whose_source_spent_a_revocable_output_with_anyone_can_pay() {
+        use requant_consensus::tx::{Delayed, HtlcRevocable, Input, OutPoint, Unlock};
+        let key = [7; 32];
+        let owner = meta(&key)["owner"].as_str().unwrap().to_owned();
+        let other = SigningKey::from_bytes(&[9; 32]);
+        let other_pkh = pkh(&other.verifying_key().to_bytes());
+        let delayed = Delayed {
+            owner: other_pkh,
+            revoke: [3; 32],
+            delay: 144,
+        };
+        let h = HtlcRevocable {
+            hash: [1; 32],
+            claim: other_pkh,
+            refund: [3; 32],
+            revoke: [4; 32],
+            timeout: 5000,
+            claim_delay: 6,
+            refund_delay: 6,
+        };
+        let mut parent = Tx::Transfer {
+            inputs: vec![
+                Input {
+                    after_blocks: 144,
+                    unlock: Unlock::DelayedOwner { d: delayed },
+                    anyone_can_pay: true,
+                    ..Input::new(OutPoint {
+                        txid: [3; 32],
+                        vout: 0,
+                    })
+                },
+                Input {
+                    after_blocks: 6,
+                    unlock: Unlock::RevocableClaim {
+                        h,
+                        preimage: [5; 32],
+                    },
+                    ..Input::new(OutPoint {
+                        txid: [3; 32],
+                        vout: 1,
+                    })
+                },
+            ],
+            outputs: vec![requant_consensus::tx::Output {
+                value: 500_000_000,
+                pkh: pkh(&SigningKey::from_bytes(&key).verifying_key().to_bytes()),
+            }],
+        };
+        parent.sign(&Network::test().chain_id, &[&other, &other]);
+        assert!(parent.uses_contracts());
+        assert_eq!(parent.encode()[4], 2, "a kind-2 transfer");
+        let tid = hex::encode(parent.txid());
+        let c = Coin {
+            txid: tid.clone(),
+            vout: 0,
+            value: 500_000_000,
+            confirmed: true,
+            spendable: true,
+            coinbase: false,
+            height: Some(4800),
+        };
+        let recipient = meta(&[8; 32])["address"].as_str().unwrap().to_owned();
+        let plan = call(
+            "plan",
+            json!({"recipient":recipient,"amount":"1","fee":"0.0001","coinsRaw":reply(json!([c]))}),
+        )
+        .unwrap();
+        let input = json!({"sealed":plan["sealed"],"owner":owner,"parents":{tid:reply(json!({"hex":hex::encode(parent.encode())}))},"freshRaw":reply(json!([c])),"encrypted":crypto::encrypt(&key,"test-only-no-funds-password").unwrap(),"password":"test-only-no-funds-password"});
+        call("sign", input).unwrap();
+    }
     #[test]
     fn emit_public_unfunded_integration_fixture() {
         let key = [7; 32];
