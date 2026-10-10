@@ -1,5 +1,12 @@
 import init, { invoke } from "../pkg/requant_extension_core.js";
 import { Engine, NodeClient, siteOrigin } from "./engine.mjs";
+import { ExtensionUpdates } from "./updates.mjs";
+const updates = new ExtensionUpdates(chrome);
+chrome.alarms.create("requant-updates", { periodInMinutes: 360 });
+chrome.runtime.onUpdateAvailable?.addListener((details) => {
+  void updates.browserAvailable(details).catch(() => {});
+});
+void updates.check().catch(() => {});
 const ready = (async () => {
   await Promise.all([
     chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" }),
@@ -50,8 +57,17 @@ const ready = (async () => {
   });
 })();
 chrome.alarms.create("requant-lock", { periodInMinutes: 0.5 });
-chrome.alarms.onAlarm.addListener(() => {
-  ready.then((e) => e.serial(() => e.sweep())).catch(() => {});
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "requant-updates") void updates.check().catch(() => {});
+  if (alarm.name !== "requant-lock") return;
+  ready
+    .then((e) =>
+      e.serial(async () => {
+        await e.sweep();
+        await updates.apply(e);
+      }),
+    )
+    .catch(() => {});
 });
 const uiSender = (sender) =>
   sender.id === chrome.runtime.id &&
@@ -72,6 +88,9 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         throw new Error("Unauthorized extension request.");
       const action = message.action,
         args = message.args ?? {};
+      if (action === "updateStatus") return updates.status();
+      if (action === "checkUpdates") return updates.check(true);
+      if (action === "applyBrowserUpdate") return updates.apply(engine, true);
       const allowed = [
         "state",
         "add",

@@ -27,6 +27,7 @@ import { call, preview } from "./api";
 import { initialPage, dedicatedPageUrl } from "./navigation.mjs";
 import { short, rqt } from "./amounts.mjs";
 import { createSnapshotRefresh } from "./snapshot-refresh.mjs";
+import WalletUpdates from "./WalletUpdates";
 import type { Wallet, State, Snapshot, Review, SiteRequest } from "./types";
 import "./style.css";
 import "./signal.css";
@@ -971,6 +972,9 @@ function App() {
           </h1>
           <p>Local storage. Explicit permission.</p>
         </div>
+        <WalletUpdates
+          blocked={busy || !!request || state.requests.length > 0}
+        />
         <div className="card settings-list">
           <button onClick={() => nav("backup")}>
             <ShieldCheck size={18} />
@@ -1306,6 +1310,17 @@ function App() {
         </div>
       )}
       <main>
+        {page !== "settings" && (
+          <WalletUpdates
+            compact
+            blocked={
+              busy ||
+              !!request ||
+              state.requests.length > 0 ||
+              !["home", "activity", "receive"].includes(page)
+            }
+          />
+        )}
         {errorBox}
         {content}
         {nodeError && state.unlocked && (
