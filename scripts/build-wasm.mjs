@@ -32,3 +32,21 @@ run("wasm-bindgen", [
   "--out-dir",
   "pkg",
 ]);
+
+run("cargo", [
+  "build",
+  "--locked",
+  "-p",
+  "requant-browser-core",
+  "--release",
+  "--target",
+  "wasm32-unknown-unknown",
+]);
+mkdirSync("pkg-browser", { recursive: true });
+run("wasm-bindgen", [
+  "target/wasm32-unknown-unknown/release/requant_browser_core.wasm",
+  "--target",
+  "web",
+  "--out-dir",
+  "pkg-browser",
+]);

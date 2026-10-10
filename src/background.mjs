@@ -1,4 +1,6 @@
 import init, { invoke } from "../pkg/requant_extension_core.js";
+import initFull, { run } from "../pkg-browser/requant_browser_core.js";
+import { FullState } from "./full-state.mjs";
 import { Engine, NodeClient, siteOrigin } from "./engine.mjs";
 import { ExtensionUpdates } from "./updates.mjs";
 const updates = new ExtensionUpdates(chrome);
@@ -15,6 +17,16 @@ const ready = (async () => {
   await init({
     module_or_path: chrome.runtime.getURL("requant_extension_core_bg.wasm"),
   });
+  await initFull({
+    module_or_path: chrome.runtime.getURL("requant_browser_core_bg.wasm"),
+  });
+  const fullCore = (op, args) => {
+    try {
+      return JSON.parse(run(op, JSON.stringify(args)));
+    } catch (e) {
+      throw new Error(typeof e === "string" ? e : e.message);
+    }
+  };
   const core = (op, args) => {
     try {
       return JSON.parse(invoke(op, JSON.stringify(args)));
@@ -22,10 +34,11 @@ const ready = (async () => {
       throw new Error(typeof e === "string" ? e : e.message);
     }
   };
-  return new Engine({
+  const engine = new Engine({
     local: chrome.storage.local,
     session: chrome.storage.session,
     core,
+    fullCore,
     node: new NodeClient(core),
     openApproval: async (id) => {
       await chrome.windows.create({
@@ -55,6 +68,8 @@ const ready = (async () => {
       }
     },
   });
+  engine.fullState = new FullState(engine, fullCore);
+  return engine;
 })();
 chrome.alarms.create("requant-lock", { periodInMinutes: 0.5 });
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -71,7 +86,9 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 const uiSender = (sender) =>
   sender.id === chrome.runtime.id &&
-  sender.url?.split("?")[0] === chrome.runtime.getURL("popup.html");
+  ["popup.html", "full.html"].some(
+    (page) => sender.url?.split("?")[0] === chrome.runtime.getURL(page),
+  );
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   (async () => {
     const engine = await ready;
@@ -88,6 +105,33 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         throw new Error("Unauthorized extension request.");
       const action = message.action,
         args = message.args ?? {};
+      if (action === "fullStateLoad") return engine.fullState.load();
+      if (action === "fullStateSave")
+        return engine.fullState.save(args.revision, args.key, args.value);
+      if (action === "fullCore") {
+        if (
+          typeof args.input !== "string" ||
+          args.input.length > 64 * 1024 * 1024
+        )
+          throw new Error("Invalid local wallet request.");
+        return engine.fullCore(args.op, JSON.parse(args.input));
+      }
+      if (action === "fullRpc") {
+        if (
+          ![
+            "getinfo",
+            "getblock",
+            "gettx",
+            "gettxbatch",
+            "utxos",
+            "history",
+            "estimatefee",
+            "sendtx",
+          ].includes(args.method)
+        )
+          throw new Error("Unsupported wallet request.");
+        return (await engine.node.rpc(args.method, args.params)).raw;
+      }
       if (action === "updateStatus") return updates.status();
       if (action === "checkUpdates") return updates.check(true);
       if (action === "applyBrowserUpdate") return updates.apply(engine, true);

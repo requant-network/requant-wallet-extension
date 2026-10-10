@@ -24,7 +24,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo install wasm-bindgen-cli --version 0.2.129 --locked
       - run: npm ci
-      - run: cargo test --locked -p requant-extension-core
+      - run: cargo test --locked -p requant-extension-core -p requant-browser-core -p requant-wallet-portable
       - run: cargo clippy --locked -p requant-extension-core --all-targets -- -D warnings
       - run: npm run build
       - run: npm test

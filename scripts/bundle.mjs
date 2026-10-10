@@ -19,6 +19,10 @@ await copyFile(
   "pkg/requant_extension_core_bg.wasm",
   "dist/requant_extension_core_bg.wasm",
 );
+await copyFile(
+  "pkg-browser/requant_browser_core_bg.wasm",
+  "dist/requant_browser_core_bg.wasm",
+);
 await copyFile("vendor/LICENSE", "dist/THIRD-PARTY-LICENSE.txt");
 await mkdir("dist/icons", { recursive: true });
 const mark = await readFile("public/requant-mark.svg");

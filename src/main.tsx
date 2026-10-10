@@ -120,6 +120,10 @@ function App() {
       globalThis.chrome?.runtime?.id ? chrome.runtime.getURL("") : "",
       preview,
     );
+    if (p === "create" || p === "restore") {
+      void chrome.tabs.create({ url: chrome.runtime.getURL("full.html") });
+      return;
+    }
     if (target) {
       chrome.tabs.create({ url: target }).catch((e) => setError(e.message));
       return;
@@ -231,7 +235,7 @@ function App() {
   const footer = (
     <div className="trust">
       <ShieldCheck size={13} /> Local keys. Your confirmation.
-      <span>v0.2.0</span>
+      <span>v0.3.0</span>
     </div>
   );
   const errorBox = error && (
@@ -678,7 +682,9 @@ function App() {
               </small>
             </label>
             <label>
-              Network fee (RQT)
+              {wallet && "hdFile" in wallet
+                ? "Maximum network fee (RQT)"
+                : "Network fee limit (RQT)"}
               <input
                 name="fee"
                 inputMode="decimal"
@@ -1310,6 +1316,16 @@ function App() {
         </div>
       )}
       <main>
+        {!requestParam && (
+          <a
+            className="primary full"
+            href="full.html"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open full wallet · Recovery phrase, addresses & offline signing
+          </a>
+        )}
         {page !== "settings" && (
           <WalletUpdates
             compact
