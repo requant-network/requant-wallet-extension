@@ -29,6 +29,9 @@ const mark = await readFile("public/requant-mark.svg");
 for (const size of [16, 32, 48, 128])
   await sharp(mark).resize(size, size).png().toFile(`dist/icons/${size}.png`);
 const manifest = JSON.parse(await readFile("dist/manifest.json", "utf8"));
+const pkg = JSON.parse(await readFile("package.json", "utf8"));
+if (manifest.version !== pkg.version)
+  throw new Error("Extension manifest version must match the package version.");
 if (
   manifest.manifest_version !== 3 ||
   manifest.background.service_worker !== "background.js"

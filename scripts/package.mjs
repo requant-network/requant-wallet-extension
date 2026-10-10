@@ -3,6 +3,9 @@ import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 const p = JSON.parse(await readFile("package.json", "utf8"));
+const manifest = JSON.parse(await readFile("dist/manifest.json", "utf8"));
+if (manifest.version !== p.version)
+  throw new Error("Cannot package an extension with a stale manifest version.");
 await mkdir("artifacts", { recursive: true });
 const name = `Requant-Wallet-Extension_${p.version}_chromium-testnet.zip`;
 await rm(resolve("artifacts", name), { force: true });
