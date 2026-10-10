@@ -4,5 +4,5 @@
   "core": "crates/browser-core",
   "upstreamWallet": "ef789d4e71197e7e32166611aac57ca1578769cd",
   "version": "0.4.0",
-  "sourceCommit": "8fd6b2c10c207bab95ed3c24284c1b63c5f7684b"
+  "sourceCommit": "f339a2857f51b61932f7b24b76e5f608b495e7a3"
 }
