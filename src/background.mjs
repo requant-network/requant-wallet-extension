@@ -116,6 +116,18 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
           throw new Error("Invalid local wallet request.");
         return engine.fullCore(args.op, JSON.parse(args.input));
       }
+      if (action === "fullProtocol") {
+        if (
+          !(
+            args.method?.startsWith("maker.") ||
+            args.method?.startsWith("tron.")
+          ) ||
+          !Array.isArray(args.params) ||
+          JSON.stringify(args.params).length > 32768
+        )
+          throw new Error("Unsupported protocol request.");
+        return (await engine.node.rpc(args.method, args.params, true)).raw;
+      }
       if (action === "fullRpc") {
         if (
           ![
@@ -127,6 +139,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
             "history",
             "estimatefee",
             "sendtx",
+            "sendpackage",
           ].includes(args.method)
         )
           throw new Error("Unsupported wallet request.");

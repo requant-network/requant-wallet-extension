@@ -23,7 +23,7 @@ export class ExtensionUpdates {
       (await this.browser.storage.local.get("requantUpdates")).requantUpdates ||
       {};
     const details = await this.browser.management?.getSelf().catch(() => null);
-    const version = this.browser.runtime.getManifest?.().version || "0.4.0";
+    const version = this.browser.runtime.getManifest?.().version || "0.5.0";
     return {
       ...stored,
       current: version,

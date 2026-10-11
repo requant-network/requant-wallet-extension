@@ -8,8 +8,14 @@ if (!env.CARGO_HOME && existsSync(`${sibling}/cargo/bin/cargo`)) {
   env.RUSTUP_HOME = `${sibling}/rustup`;
   env.PATH = `${sibling}/cargo/bin:${env.PATH}`;
 }
-if (process.platform === "darwin")
+if (process.platform === "darwin") {
   env.DEVELOPER_DIR = "/Library/Developer/CommandLineTools";
+  if (
+    !env.CC_wasm32_unknown_unknown &&
+    existsSync("/opt/homebrew/opt/llvm/bin/clang")
+  )
+    env.CC_wasm32_unknown_unknown = "/opt/homebrew/opt/llvm/bin/clang";
+}
 function run(command, args) {
   const p = spawnSync(command, args, { env, stdio: "inherit" });
   if (p.error) throw p.error;

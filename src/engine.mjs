@@ -52,16 +52,19 @@ export class NodeClient {
     this.core = core;
     this.fetcher = fetcher;
   }
-  async rpc(method, params = []) {
-    const r = await this.fetcher(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ method, params }),
-      signal: AbortSignal.timeout(12_000),
-      redirect: "error",
-      credentials: "omit",
-      cache: "no-store",
-    }).catch(() => {
+  async rpc(method, params = [], protocol = false) {
+    const r = await this.fetcher(
+      protocol ? "https://requant.network/wallet-api/v1/protocol" : API,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ method, params }),
+        signal: AbortSignal.timeout(12_000),
+        redirect: "error",
+        credentials: "omit",
+        cache: "no-store",
+      },
+    ).catch(() => {
       throw new WalletError("Node connection is unavailable.");
     });
     if (!r.ok) throw new WalletError("Node connection is unavailable.");

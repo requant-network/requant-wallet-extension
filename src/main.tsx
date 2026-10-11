@@ -235,7 +235,7 @@ function App() {
   const footer = (
     <div className="trust">
       <ShieldCheck size={13} /> Local keys. Your confirmation.
-      <span>v0.4.0</span>
+      <span>v0.5.0</span>
     </div>
   );
   const errorBox = error && (
@@ -1323,7 +1323,7 @@ function App() {
             target="_blank"
             rel="noreferrer"
           >
-            Open full wallet · Recovery phrase, addresses & offline signing
+            Open full wallet · Swaps, channels & advanced tools
           </a>
         )}
         {page !== "settings" && (

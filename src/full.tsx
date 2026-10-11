@@ -79,6 +79,7 @@ const adapter: Platform = {
     call("fullStateSave", { revision, key, value }),
   core: (op, args) => call("fullCore", { op, input: JSON.stringify(args) }),
   rpc: (method, params) => call("fullRpc", { method, params }),
+  protocol: (method,params) => call("fullProtocol",{method,params}),
   lock: () => {
     void call("lock").catch(() => {});
   },

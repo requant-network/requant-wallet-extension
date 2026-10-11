@@ -1,4 +1,8 @@
-const KEYS = ["requant.web.v1", "requant.web.outbox.v1"];
+const KEYS = [
+  "requant.web.v1",
+  "requant.web.outbox.v1",
+  "requant.protocols.v1",
+];
 export class FullState {
   constructor(engine, core) {
     this.engine = engine;
@@ -92,6 +96,8 @@ export class FullState {
         db.selected = db.wallets[0]?.id ?? null;
       // A file/password change invalidates reviews and every unlocked provider session.
       await this.engine.lock();
+    } else if (key === KEYS[2]) {
+      this.core("protocolStore", { data: value, previous: state.data[key] });
     } else {
       const rows = JSON.parse(value);
       if (!Array.isArray(rows) || rows.length > 100)

@@ -98,3 +98,7 @@ Pinned source provenance is in [vendor/PROVENANCE.md](vendor/PROVENANCE.md).
 ## Full wallet workspace / 0.4.0
 
 Open full wallet from the popup to use the shared Signal interface: 24-word creation/restoration, encrypted/watch-only files, legacy key import, multiple receive/change addresses and count/deposit exports, coins/history/transaction detail, multiple recipients, max/consolidation and offline prepare/sign/broadcast. The full wallet and popup share trusted Chrome storage; existing legacy keys are preserved. Website accounts remain bound to their wallet and original tab/document. HD website payments estimate a fee and enforce the website's requested `fee` as a maximum; the actual fee is reviewed before signing. Watch-only wallets cannot unlock website signing. Desktop/mobile update behavior is documented in the wallet repository; ZIP extensions require manual replacement and Reload.
+
+## Protocol tools / 0.5.0
+
+The full workspace includes verified testnet BTC/Lightning/TRON-USDT swaps, one-way payment channels and signed package relay. It shares portable core 0.10.0 and Signal / IBM Plex Sans with web, desktop and Android. Open the full wallet from the popup to use these flows. Every site connection and provider payment still requires its own origin-bound approval; websites cannot access protocol storage or swap secrets.
