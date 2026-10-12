@@ -1,6 +1,6 @@
 # Requant Wallet Extension
 
-- Keep this repository private. Public UI and documentation are English.
+- Public UI and documentation are English. Keep credentials and private user data outside the repository.
 - Use the approved Requant ivory, graphite and orange identity and the authoritative SVG mark.
 - This is the Requant testnet, not an Ethereum wallet. Expose `window.requant`, never `window.ethereum`.
 - Sign locally using the pinned consensus rules. Never transmit a password, key or encrypted backup.
