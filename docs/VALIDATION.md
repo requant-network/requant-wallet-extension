@@ -43,8 +43,9 @@ Automated checks:
 The service-worker and extension API integration tests run with a modeled Chrome
 API environment and the actual built scripts. Native installation via Load unpacked,
 browser permission dialogs, and end-to-end wallet use in Chrome, Edge and Brave still
-need manual checks. No browser-store submission, Firefox build, independent audit,
-real user key import or real funded transfer was performed by these tests.
+need manual checks. An internal security review is planned; these tests do not
+complete that review. No browser-store submission, Firefox build, real user key
+import or real funded transfer was performed by these tests.
 
 Before public distribution, verify install, create/backup, restore, unlock/idle lock,
 QR/copy, connect/disconnect, navigation invalidation and test-only transfer review
