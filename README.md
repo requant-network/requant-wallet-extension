@@ -2,7 +2,7 @@
 
 A private Requant testnet wallet for **Chrome, Edge and Brave**, with an English
 interface in the Requant light identity. This is an early testnet release.
-Test RQT has no monetary value. This extension has not had an independent security audit.
+Test RQT has no monetary value. An internal security review of this extension is planned and has not yet been completed.
 
 ## Install
 

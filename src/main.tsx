@@ -1032,10 +1032,7 @@ function App() {
         </div>
         <div className="note">
           <AlertCircle size={16} />
-          <span>
-            Early testnet release. No independent security audit has been
-            completed.
-          </span>
+          <span>Early testnet release. Internal security review planned.</span>
         </div>
         <a
           className="text full"
