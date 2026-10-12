@@ -24,7 +24,7 @@
 - Signed bytes are recorded before broadcasting. Transport ambiguity is shown as
   unknown; there is no automatic retry. Exact bytes can be checked against `gettx`.
 
-No independent audit has been performed. Browser or device compromise, malicious
+An internal security review is planned and has not yet been completed. Browser or device compromise, malicious
 extensions, keyloggers, corrupted browser storage and a dishonest configured node
 remain risks. Storage encryption is only as strong as the password. The wallet
 does not independently prove the full chain, balances or confirmations. Node-provided
