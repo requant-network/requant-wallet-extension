@@ -1,3 +1,5 @@
+> **Swaps paused (0.5.1):** New swap offers, funding, approvals and locks are disabled. Existing encrypted swap backups, status checks, claims, refunds and withdrawals remain available. Do not fund old addresses or invoices.
+
 # Requant Wallet Extension
 
 A Requant testnet wallet for **Chrome, Edge and Brave**, with an English
