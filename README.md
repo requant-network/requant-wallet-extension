@@ -103,7 +103,7 @@ Open full wallet from the popup to use the shared Signal interface: 24-word crea
 
 ## Protocol tools / 0.5.0
 
-The full workspace includes verified testnet BTC/Lightning/TRON-USDT swaps, one-way payment channels and signed package relay. It shares portable core 0.10.0 and Signal / IBM Plex Sans with web, desktop and Android. Open the full wallet from the popup to use these flows. Every site connection and provider payment still requires its own origin-bound approval; websites cannot access protocol storage or swap secrets.
+The full workspace includes recovery of existing BTC Signet, Lightning testnet and TRON Nile USDT swaps, one-way payment channels and signed package relay. New swap offers, approvals and locks are disabled; do not fund old addresses or invoices. It shares portable core 0.10.0 and Signal / IBM Plex Sans with web, desktop and Android. Open the full wallet from the popup to use these flows. Every site connection and provider payment still requires its own origin-bound approval; websites cannot access protocol storage or swap secrets.
 
 ## License
 
