@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Requant Wallet \u2014 Testnet",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Your Requant testnet wallet. Create, restore, receive, send and connect to websites with local signing.",
   "minimum_chrome_version": "120",
   "action": {
@@ -31,8 +31,12 @@
     "scripting",
     "unlimitedStorage"
   ],
-  "host_permissions": ["https://requant.network/*"],
-  "optional_host_permissions": ["https://*/*"],
+  "host_permissions": [
+    "https://requant.network/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; connect-src 'self' https://requant.network; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'"
   }
