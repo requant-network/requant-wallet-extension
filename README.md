@@ -106,3 +106,7 @@ The full workspace includes verified testnet BTC/Lightning/TRON-USDT swaps, one-
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The vendored Requant source in `vendor/` is Apache-2.0 as well; IBM Plex Sans is under the SIL Open Font License 1.1.
+
+## ReCast wallet approvals
+
+Version 0.5.1 supports real ReCast login and signed channel updates through Website connections in the full wallet. The background relay requires an explicit site permission and carries only the public typed approval. See [ReCast Connect](docs/RECAST_CONNECT.md).

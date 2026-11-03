@@ -7,12 +7,18 @@ export type UpdateProps = {
   details: boolean;
 };
 export type Platform = {
-  kind: "native" | "extension";
+  kind: "native" | "extension" | "telegram";
   load: () => Promise<{ revision: number; data: Record<string, string> }>;
   save: (revision: number, key: string, value: string) => Promise<number>;
   core?: (op: string, args: Record<string, unknown>) => Promise<any>;
   rpc?: (method: string, params: unknown[]) => Promise<string>;
   protocol?: (method: string, params: unknown[]) => Promise<string>;
+  recastRelay?: (
+    url: string,
+    token: string,
+    action: string,
+    approval?: unknown,
+  ) => Promise<any>;
   lock: () => void;
   download: (text: string, name: string) => Promise<boolean>;
   pick?: (max: number) => Promise<{ text: string; name: string } | null>;
@@ -22,6 +28,18 @@ export type Platform = {
   updates: (props: UpdateProps) => ReactNode;
   settings?: () => Promise<{ endpoint: string; autoLockMinutes: number }>;
   configure?: (endpoint: string) => Promise<void>;
+  navigation?: (state: {
+    back: () => void;
+    canGoBack: boolean;
+    blocked: boolean;
+    recastRelay?: (
+      url: string,
+      token: string,
+      action: string,
+      approval?: unknown,
+    ) => Promise<any>;
+    lock: () => void;
+  }) => () => void;
 };
 declare global {
   interface Window {

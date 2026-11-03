@@ -1,3 +1,4 @@
+import { recastRelay } from "./recast-relay.mjs";
 import init, { invoke } from "../pkg/requant_extension_core.js";
 import initFull, { run } from "../pkg-browser/requant_browser_core.js";
 import { FullState } from "./full-state.mjs";
@@ -87,7 +88,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 const uiSender = (sender) =>
   sender.id === chrome.runtime.id &&
   ["popup.html", "full.html"].some(
-    (page) => sender.url?.split("?")[0] === chrome.runtime.getURL(page),
+    (page) => sender.url?.split(/[?#]/)[0] === chrome.runtime.getURL(page),
   );
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   (async () => {
@@ -105,6 +106,11 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         throw new Error("Unauthorized extension request.");
       const action = message.action,
         args = message.args ?? {};
+      if (action === "recastRelay") {
+        const origin = new URL(args.url).origin;
+        if (!await chrome.permissions.contains({origins:[origin+"/*"]})) throw new Error("Grant this website permission in the wallet first.");
+        return recastRelay(args);
+      }
       if (action === "fullStateLoad") return engine.fullState.load();
       if (action === "fullStateSave")
         return engine.fullState.save(args.revision, args.key, args.value);

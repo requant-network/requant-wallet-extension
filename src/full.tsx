@@ -74,6 +74,11 @@ function Updates(p: UpdateProps) {
 }
 const adapter: Platform = {
   kind: "extension",
+  recastRelay: async (url, token, action, approval) => {
+    const origin = new URL(url).origin;
+    if (!await chrome.permissions.request({origins:[origin+"/*"]})) throw new Error("Website permission was denied.");
+    return call("recastRelay", {url,token,action,approval});
+  },
   load: () => call("fullStateLoad"),
   save: (revision, key, value) =>
     call("fullStateSave", { revision, key, value }),

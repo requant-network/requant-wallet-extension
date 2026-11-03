@@ -1,3 +1,4 @@
+import RecastConnect from "./RecastConnect";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowUpRight,
@@ -37,6 +38,7 @@ import { rqt, short } from "../../src/amounts.mjs";
 import { platform, site } from "./platform";
 import { useWebUpdates } from "./updates";
 type View =
+  | "connections"
   | "wallet"
   | "send"
   | "receive"
@@ -60,6 +62,7 @@ type Modal =
   | null;
 const nav: { id: View; name: string; icon: typeof Wallet }[] = [
   { id: "wallet", name: "Wallet", icon: Wallet },
+  { id: "connections", name: "Website connections", icon: Globe },
   { id: "send", name: "Send RQT", icon: Send },
   { id: "addresses", name: "Addresses", icon: ContactRound },
   { id: "coins", name: "Coins", icon: Layers },
@@ -71,6 +74,10 @@ const nav: { id: View; name: string; icon: typeof Wallet }[] = [
   { id: "conditions", name: "Conditions", icon: ShieldCheck },
 ];
 const titles: Record<View, [string, string]> = {
+  connections: [
+    "Website connections",
+    "Review a ReCast sign-in or channel update before approving.",
+  ],
   wallet: ["Your wallet", "A clear view of your Requant testnet wallet."],
   send: ["Send RQT", "Send to one or more recipients. Review before signing."],
   receive: ["Receive RQT", "Share a receive address from your wallet."],
@@ -222,7 +229,9 @@ export default function App() {
         return "";
       }
     }),
-    [view, setView] = useState<View>("wallet");
+    [view, setView] = useState<View>(() =>
+      location.hash.startsWith("#recast=") ? "connections" : "wallet",
+    );
   const [snapshot, setSnapshot] = useState<api.Snapshot | null>(null),
     [node, setNode] = useState<any>(null),
     [error, setError] = useState(""),
@@ -312,7 +321,9 @@ export default function App() {
     !!offlineReview ||
     view === "send" ||
     view === "offline" ||
-    ["conditions", "swaps", "channels", "packages"].includes(view) ||
+    ["connections", "conditions", "swaps", "channels", "packages"].includes(
+      view,
+    ) ||
     !!password ||
     !!source;
   const walletUpdate = useWebUpdates(
@@ -486,7 +497,9 @@ export default function App() {
             );
           }
         }
-        setView("wallet");
+        setView(
+          location.hash.startsWith("#recast=") ? "connections" : "wallet",
+        );
       },
     );
   }
@@ -624,6 +637,30 @@ export default function App() {
     setError("");
     setResult("");
   };
+  useEffect(
+    () =>
+      platform()?.navigation?.({
+        canGoBack:
+          view !== "wallet" || !!modal || toolsOpen || (!!setup && !!current),
+        blocked: updateBlocked,
+        lock: clear,
+        back: () => {
+          if (busy || phrase) {
+            setNotice(
+              "Finish the current action and save your backup before going back.",
+            );
+            return;
+          }
+          if (modal) setModal(null);
+          else if (toolsOpen) setToolsOpen(false);
+          else {
+            setSetup(null);
+            goto("wallet");
+          }
+        },
+      }),
+    [view, modal, toolsOpen, setup, current?.id, updateBlocked, busy, phrase],
+  );
   const issued = current?.meta.addresses.filter((a) => a.issued) || [];
   const fileInput = (
     label: string,
@@ -728,21 +765,25 @@ export default function App() {
       <aside className="sidebar">
         <a className="brand" href="https://requant.network/">
           <img
-            src={platform() ? "./requant-mark.svg" : "/wallet/requant-mark.svg"}
+            src={
+              platform()?.kind === "telegram"
+                ? "/wallet/requant-mark.svg"
+                : platform()
+                  ? "./requant-mark.svg"
+                  : "/wallet/requant-mark.svg"
+            }
             alt="Requant"
           />
           <span>
             <strong>REQUANT</strong>
             <small>
-              {platform()?.kind === "extension"
-                ? "BROWSER WALLET"
-                : platform()
-                  ? "WALLET"
-                  : platform()?.kind === "extension"
-                    ? "BROWSER WALLET"
-                    : platform()
-                      ? "WALLET"
-                      : "WEB WALLET"}
+              {platform()?.kind === "telegram"
+                ? "TELEGRAM WALLET"
+                : platform()?.kind === "extension"
+                  ? "BROWSER WALLET"
+                  : platform()
+                    ? "WALLET"
+                    : "WEB WALLET"}
             </small>
           </span>
         </a>
@@ -849,9 +890,11 @@ export default function App() {
                   ? "WATCH-ONLY WALLET"
                   : platform()?.kind === "extension"
                     ? "BROWSER WALLET"
-                    : platform()
-                      ? "WALLET"
-                      : "WEB WALLET"}
+                    : platform()?.kind === "telegram"
+                      ? "TELEGRAM WALLET"
+                      : platform()
+                        ? "WALLET"
+                        : "WEB WALLET"}
             </div>
             <h1>
               {setup
@@ -1171,7 +1214,11 @@ export default function App() {
                     setPhrase("");
                     setReveal(false);
                     reload();
-                    setView("wallet");
+                    setView(
+                      location.hash.startsWith("#recast=")
+                        ? "connections"
+                        : "wallet",
+                    );
                   })
                 }
               >
@@ -1801,6 +1848,9 @@ export default function App() {
                   </section>
                 )}
               </>
+            )}
+            {view === "connections" && (
+              <RecastConnect wallet={current} reset={lockTick} />
             )}
             {view === "swaps" && (
               <Swaps
