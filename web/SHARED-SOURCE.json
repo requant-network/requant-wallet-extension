@@ -3,6 +3,6 @@
   "interface": "web/src",
   "core": "crates/browser-core",
   "upstreamWallet": "845d0e9f30122fc742799a7bd8855879cff02fd1",
-  "version": "0.5.1",
-  "sourceCommit": "03c4bc6c9bb50d8a32538019bd8d50d94b64aea2"
+  "version": "0.5.3",
+  "sourceCommit": "ae064635c6c5d95d93d5d607af126b368b3e3c54"
 }

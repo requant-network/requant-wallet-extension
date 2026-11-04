@@ -1320,7 +1320,7 @@ function App() {
             target="_blank"
             rel="noreferrer"
           >
-            Open full wallet · Swaps, channels & advanced tools
+            Open full wallet · Channels & advanced tools
           </a>
         )}
         {page !== "settings" && (
