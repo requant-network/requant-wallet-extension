@@ -13,7 +13,14 @@ export function newer(version, current) {
   return false;
 }
 export class ExtensionUpdates {
-  constructor(browser, fetcher = fetch) {
+  constructor(
+    browser,
+    fetcher = fetch,
+    verify = async () => {
+      throw new Error("Installed signature verifier is unavailable.");
+    },
+  ) {
+    this.verify = verify;
     this.browser = browser;
     this.fetcher = fetcher;
     this.running = null;
@@ -22,13 +29,25 @@ export class ExtensionUpdates {
     const stored =
       (await this.browser.storage.local.get("requantUpdates")).requantUpdates ||
       {};
-    const details = await this.browser.management?.getSelf().catch(() => null);
     const version = this.browser.runtime.getManifest?.().version || "0.5.0";
+    let row = {};
+    if (stored.signed) {
+      try {
+        row = await this.release(stored.signed, version);
+      } catch {
+        /* Never offer an unverified cached update. */
+      }
+    }
+    const details = await this.browser.management?.getSelf().catch(() => null);
     return {
-      ...stored,
+      checkedAt: stored.checkedAt,
+      error: stored.error,
+      ...row,
+      signed: row.version ? stored.signed : undefined,
       current: version,
       unpacked: !details || details.installType === "development",
-      available: newer(stored.version || "", version),
+      available: newer(row.version || "", version),
+      browserVersion: stored.browserVersion,
       browserReady:
         !!stored.browserReady && newer(stored.browserVersion || "", version),
     };
@@ -56,23 +75,21 @@ export class ExtensionUpdates {
         signal: AbortSignal.timeout(15_000),
       });
       if (!response.ok) throw new Error("Cannot check updates.");
-      const text = await response.text();
-      if (text.length > 65_536) throw new Error("Invalid update feed.");
-      const row = JSON.parse(text);
+      const text = new TextDecoder("utf-8", { fatal: true }).decode(
+        await readBounded(response, 262144),
+      );
+      const signed = JSON.parse(text);
+      const row = await this.release(signed, state.version || state.current);
       if (
-        !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(row.version) ||
-        row.url !==
-          `https://requant.network/downloads/wallet/v${row.version}-testnet/Requant-Wallet-Extension_${row.version}_chromium-testnet.zip` ||
-        !/^[a-f0-9]{64}$/.test(row.sha256) ||
-        !Number.isSafeInteger(row.bytes) ||
-        row.bytes <= 0 ||
-        row.bytes > 20_000_000
+        state.version === row.version &&
+        state.signed &&
+        state.signed.manifest !== signed.manifest
       )
-        throw new Error("Invalid update feed.");
+        throw new Error("Release versions are immutable.");
       const { browserReady, browserVersion } = state;
       await this.browser.storage.local.set({
         requantUpdates: {
-          ...row,
+          signed,
           checkedAt: Date.now(),
           browserReady,
           browserVersion,
@@ -82,13 +99,68 @@ export class ExtensionUpdates {
     } catch {
       await this.browser.storage.local.set({
         requantUpdates: {
-          ...state,
+          ...((await this.browser.storage.local.get("requantUpdates"))
+            .requantUpdates || {}),
           checkedAt: Date.now(),
           error: "Update check unavailable. Will retry automatically.",
         },
       });
     }
     return this.status();
+  }
+  async release(signed, floor) {
+    if (
+      typeof signed?.manifest !== "string" ||
+      typeof signed?.signature !== "string"
+    )
+      throw new Error("Missing signed release manifest.");
+    const manifest = await this.verify({
+      ...signed,
+      floor,
+      client: this.browser.runtime.getManifest().version,
+    });
+    const name = `Requant-Wallet-Extension_${manifest.version}_chromium-testnet.zip`;
+    const file = manifest.files?.[0];
+    if (
+      manifest.files?.length !== 1 ||
+      file.path !== name ||
+      file.bytes < 1 ||
+      file.bytes > 16 * 1024 * 1024
+    )
+      throw new Error("Invalid signed extension package.");
+    return {
+      version: manifest.version,
+      bytes: file.bytes,
+      sha256: file.sha256,
+      url: `https://requant.network/downloads/wallet/v${manifest.version}-testnet/${name}`,
+    };
+  }
+  async download() {
+    const state = await this.status();
+    if (!state.available || !state.signed)
+      throw new Error("No verified update is available.");
+    const response = await this.fetcher(state.url, {
+      credentials: "omit",
+      cache: "no-store",
+      redirect: "error",
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!response.ok) throw new Error("Cannot download the signed update.");
+    const bytes = await readBounded(response, state.bytes);
+    const digest = Array.from(
+      new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
+      (b) => b.toString(16).padStart(2, "0"),
+    ).join("");
+    if (bytes.length !== state.bytes || digest !== state.sha256)
+      throw new Error("Extension package hash verification failed.");
+    // The trusted extension UI creates the Blob; MV3 workers cannot create object URLs.
+    let encoded = "";
+    for (let i = 0; i < bytes.length; i += 8192)
+      encoded += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    return {
+      base64: btoa(encoded),
+      name: `Requant-Wallet-Extension_${state.version}_chromium-testnet.zip`,
+    };
   }
   async browserAvailable(details) {
     if (!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(details.version)) return;
@@ -119,4 +191,32 @@ export class ExtensionUpdates {
     this.browser.runtime.reload();
     return true;
   }
+}
+
+export async function readBounded(response, maximum) {
+  if (Number(response.headers.get("content-length")) > maximum)
+    throw new Error("Update exceeds the size limit.");
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("Missing update body.");
+  const chunks = [];
+  let size = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.length;
+      if (size > maximum) throw new Error("Update exceeds the size limit.");
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return bytes;
 }

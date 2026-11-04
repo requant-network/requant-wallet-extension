@@ -4,7 +4,9 @@ import initFull, { run } from "../pkg-browser/requant_browser_core.js";
 import { FullState } from "./full-state.mjs";
 import { Engine, NodeClient, siteOrigin } from "./engine.mjs";
 import { ExtensionUpdates } from "./updates.mjs";
-const updates = new ExtensionUpdates(chrome);
+const updates = new ExtensionUpdates(chrome, fetch, async (args) =>
+  (await ready).fullCore("verifyRelease", args),
+);
 chrome.alarms.create("requant-updates", { periodInMinutes: 360 });
 chrome.runtime.onUpdateAvailable?.addListener((details) => {
   void updates.browserAvailable(details).catch(() => {});
@@ -108,7 +110,8 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         args = message.args ?? {};
       if (action === "recastRelay") {
         const origin = new URL(args.url).origin;
-        if (!await chrome.permissions.contains({origins:[origin+"/*"]})) throw new Error("Grant this website permission in the wallet first.");
+        if (!(await chrome.permissions.contains({ origins: [origin + "/*"] })))
+          throw new Error("Grant this website permission in the wallet first.");
         return recastRelay(args);
       }
       if (action === "fullStateLoad") return engine.fullState.load();
@@ -151,6 +154,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
           throw new Error("Unsupported wallet request.");
         return (await engine.node.rpc(args.method, args.params)).raw;
       }
+      if (action === "downloadVerifiedUpdate") return updates.download();
       if (action === "updateStatus") return updates.status();
       if (action === "checkUpdates") return updates.check(true);
       if (action === "applyBrowserUpdate") return updates.apply(engine, true);

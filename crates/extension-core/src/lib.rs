@@ -166,6 +166,7 @@ pub fn execute(op: &str, input: &str) -> Result<String> {
             let value = transfer::parse_amount(field(&v, "amount")?)?;
             let fee = transfer::parse_amount(field(&v, "fee")?)?;
             let selected = transfer::select(&coins(field(&v, "coinsRaw")?)?, value, fee, false)?;
+            let fee = transfer::reviewed_fee(&selected, value, fee)?;
             if selected.len() > 64 {
                 return Err("Use a smaller amount: this transfer exceeds 64 inputs.".into());
             }
