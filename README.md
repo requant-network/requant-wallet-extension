@@ -110,3 +110,5 @@ Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The vendored Re
 ## ReCast wallet approvals
 
 Version 0.5.1 supports real ReCast login and signed channel updates through Website connections in the full wallet. The background relay requires an explicit site permission and carries only the public typed approval. See [ReCast Connect](docs/RECAST_CONNECT.md).
+
+Security release preparation: [signed web and extension delivery](docs/SIGNED_RELEASES.md).

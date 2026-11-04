@@ -19,6 +19,7 @@ export default function WalletUpdates({
 }) {
   const [offer, setOffer] = useState<Offer | null>(null);
   const [working, setWorking] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
   async function refresh(force = false) {
     if (preview) return;
     setWorking(true);
@@ -64,15 +65,38 @@ export default function WalletUpdates({
         </button>
       )}
       {offer.available && offer.unpacked && (
-        <a
+        <button
           className="primary"
-          href={offer.url}
-          target="_blank"
-          rel="noreferrer"
+          disabled={blocked || working}
+          onClick={async () => {
+            setWorking(true);
+            setDownloadError("");
+            try {
+              const file = await call<{ base64: string; name: string }>(
+                "downloadVerifiedUpdate",
+              );
+              const bytes = Uint8Array.from(atob(file.base64), (c) =>
+                c.charCodeAt(0),
+              );
+              const url = URL.createObjectURL(
+                new Blob([bytes], { type: "application/zip" }),
+              );
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = file.name;
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 60_000);
+            } catch (e) {
+              setDownloadError(e instanceof Error ? e.message : String(e));
+            } finally {
+              setWorking(false);
+            }
+          }}
         >
-          Download update
-        </a>
+          Download verified update
+        </button>
       )}
+      {downloadError && <p role="alert">{downloadError}</p>}
       {!compact && (
         <button
           className="secondary"
