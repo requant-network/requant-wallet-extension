@@ -50,7 +50,7 @@ export function transactionParams(p) {
 export class NodeClient {
   constructor(core, fetcher = fetch) {
     this.core = core;
-    this.fetcher = fetcher;
+    this.fetcher = fetcher.bind(globalThis);
   }
   async rpc(method, params = [], protocol = false) {
     const r = await this.fetcher(

@@ -28,6 +28,18 @@ jobs:
       - run: cargo clippy --locked -p requant-extension-core --all-targets -- -D warnings
       - run: npm run build
       - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: extension-browser-e2e
+          path: |
+            .test-profile/report/
+            .test-profile/e2e/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
       - run: npm run package
       - uses: actions/upload-artifact@v4
         with:
