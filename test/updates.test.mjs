@@ -61,7 +61,12 @@ test("public feed requires installed signature verification and rejects rollback
     calls = 0;
   const updates = new ExtensionUpdates(
     f.browser,
-    async (url, options) => {
+    async function (url, options) {
+      assert.equal(
+        this,
+        globalThis,
+        "browser fetch requires its global receiver",
+      );
       calls++;
       assert.equal(
         url,

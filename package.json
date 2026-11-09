@@ -10,7 +10,9 @@
     "test": "node --test test/*.test.mjs",
     "check": "npm run build && npm test",
     "package": "node scripts/package.mjs",
-    "format": "prettier --write src scripts test docs .github *.json *.ts *.html README.md"
+    "format": "prettier --write src scripts test e2e playwright.config.mjs docs .github *.json *.ts *.html README.md",
+    "test:e2e": "playwright test",
+    "test:e2e:prepare": "cargo test --locked -p requant-extension-core -p requant-browser-core integration_fixture"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -19,6 +21,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@types/chrome": "^0.1.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.2.0",

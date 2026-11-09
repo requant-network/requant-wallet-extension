@@ -290,7 +290,12 @@ test("provider shape validation rejects HTTP, iframe impersonation and Number am
   );
 });
 test("NodeClient retains raw uint64 values and guards testnet genesis", async () => {
-  const node = new NodeClient(core, async (_url, options) => {
+  const node = new NodeClient(core, async function (_url, options) {
+    assert.equal(
+      this,
+      globalThis,
+      "browser fetch requires its global receiver",
+    );
     const { method } = JSON.parse(options.body);
     return new Response(
       method === "getinfo"

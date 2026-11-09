@@ -69,6 +69,33 @@ review and password. Revoke connections in **Settings → Connected websites**.
 See [provider API](docs/PROVIDER.md) and [security model](docs/SECURITY.md).
 Release verification and remaining browser checks are recorded in [validation](docs/VALIDATION.md).
 
+## Browser end-to-end tests
+
+```sh
+npm ci
+npm run test:e2e:prepare
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+Use Rust 1.99.0 with the `wasm32-unknown-unknown` target and
+`wasm-bindgen-cli` 0.2.129. Playwright loads the built, unmodified Manifest V3
+extension into a new Chromium profile for every test. It exercises real WASM,
+Chrome storage, the popup/full wallet, website provider/bridge and approval
+windows. Coverage includes HD backup recovery in a second profile, legacy imports,
+exact balances, wrong passwords, reviewed transfers, spent inputs, unknown
+broadcast reconciliation, site approval/rejection, navigation invalidation and
+service-worker restart. The website fixture uses the production manifest's
+existing node-host permission and injects the shipped scripts through Chrome's
+real scripting API; Chrome's native optional-permission dialog is outside scope.
+
+RPC replies and broadcasts are fixtures; remote requests are blocked. Never fund
+the disposable wallets. Profiles are temporary and removed after each test;
+reports and failure traces stay in ignored `.test-profile/`. Existing push/PR
+checks now run these E2E tests before packaging and retain reports for seven days.
+
+
 ## Development
 
 Requirements: Node 24, Rust 1.99.0 with `wasm32-unknown-unknown`, and the

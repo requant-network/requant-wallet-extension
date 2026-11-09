@@ -22,7 +22,7 @@ export class ExtensionUpdates {
   ) {
     this.verify = verify;
     this.browser = browser;
-    this.fetcher = fetcher;
+    this.fetcher = fetcher.bind(globalThis);
     this.running = null;
   }
   async status() {
