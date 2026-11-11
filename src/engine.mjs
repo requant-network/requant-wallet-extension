@@ -300,11 +300,17 @@ export class Engine {
     if (
       result.meta.owner !== w.owner ||
       result.meta.address !== w.address ||
-      result.meta.publicKey !== w.publicKey
+      (w.publicKey != null && result.meta.publicKey !== w.publicKey)
     )
       throw new WalletError(
         "Wallet metadata does not match its encrypted key.",
       );
+    // Full-wallet legacy imports know the owner/address before decryption, but
+    // cannot derive the public key until this verified password unlock.
+    if (w.publicKey == null) {
+      w.publicKey = result.meta.publicKey;
+      await this.save(db);
+    }
     const s = await this.sessions();
     if (generation !== this.lockGeneration)
       throw new WalletError("Wallet was locked. Unlock it again.");

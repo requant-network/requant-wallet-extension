@@ -79,6 +79,66 @@ test("HD wallets use the same encrypted format and never expose their file to pr
   const current = await engine.fullState.load();
   assert.equal(JSON.parse(current.data["requant.web.v1"])[0].backedUp, false);
 });
+test("a legacy key imported through the full wallet unlocks in the popup without changing its identity", async () => {
+  const engine = setup();
+  const file = JSON.stringify({
+    requant_legacy: 1,
+    network: "test",
+    encrypted: fixture.encrypted,
+    owner: fixture.metadata.owner,
+  });
+  const row = {
+    id: "full-legacy",
+    name: "Imported legacy key",
+    file,
+    meta: fullCore("metadata", { file }),
+    backedUp: true,
+  };
+  await engine.fullState.save(0, "requant.web.v1", JSON.stringify([row]));
+  const before = await engine.db();
+  assert.equal(before.wallets[0].publicKey, undefined);
+  await assert.rejects(
+    engine.unlock({ password: "incorrect-password" }),
+    /Wrong.*password/,
+  );
+  assert.deepEqual(await engine.db(), before);
+  await engine.unlock({ password });
+  const after = await engine.db();
+  assert.equal((await engine.state()).unlocked, true);
+  assert.deepEqual(after.wallets[0], {
+    ...before.wallets[0],
+    publicKey: fixture.metadata.publicKey,
+  });
+  assert.equal(after.selected, before.selected);
+  await engine.lock();
+  await engine.unlock({ password });
+  assert.equal((await engine.state()).unlocked, true);
+});
+test("legacy metadata recovery never accepts a different address, owner or existing public key", async () => {
+  for (const change of [
+    { address: "different-address" },
+    { owner: "0".repeat(64) },
+    { publicKey: "0".repeat(64) },
+  ]) {
+    const engine = setup();
+    await engine.add({
+      name: "Unfunded key",
+      encrypted: fixture.encrypted,
+      password,
+    });
+    await engine.lock();
+    const db = await engine.db();
+    Object.assign(db.wallets[0], change);
+    await engine.local.set({ db });
+    const before = await engine.db();
+    await assert.rejects(
+      engine.unlock({ password }),
+      /metadata does not match/,
+    );
+    assert.deepEqual(await engine.db(), before);
+    assert.equal((await engine.state()).unlocked, false);
+  }
+});
 test("watch-only files cannot unlock website signing and invalid metadata never replaces a wallet", async () => {
   const engine = setup(),
     created = fullCore("create", { password });
