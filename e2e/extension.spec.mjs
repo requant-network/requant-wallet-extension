@@ -55,7 +55,7 @@ test("installed full wallet creates an HD backup and restores it in a separate e
     await restored
       .getByRole("button", { name: "Restore wallet", exact: true })
       .click();
-    await expect(restored.getByRole("alert")).toContainText(/Wrong password/);
+    await expect(restored.getByRole("alert")).toContainText(/Wrong.*password/);
     await restored
       .getByLabel("Backup password (leave empty for watch-only)")
       .fill(localPassword);
@@ -106,6 +106,69 @@ test("legacy backup unlocks locally, preserves exact balances and sends only aft
   expect(extension.node.broadcasts).toHaveLength(1);
   expect(extension.node.requests.join("\n")).not.toContain(password);
   expect(extension.node.requests.join("\n")).not.toContain(fixture.encrypted);
+});
+test("a legacy backup imported in the full wallet unlocks and signs in the popup with the same key", async ({
+  page,
+  extension,
+}) => {
+  await page.goto(extension.url("full.html"));
+  await page
+    .getByRole("button", { name: "Import backup", exact: true })
+    .click();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "unfunded-legacy.key",
+    mimeType: "text/plain",
+    buffer: Buffer.from(fixture.encrypted),
+  });
+  await page
+    .getByLabel("Backup password (leave empty for watch-only)")
+    .fill(password);
+  await page
+    .getByRole("button", { name: "Restore wallet", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Show address & QR", exact: true }),
+  ).toBeVisible();
+  const before = await page.evaluate(() => chrome.storage.local.get("db"));
+  await page.goto(extension.url("popup.html"));
+  await expect(
+    page.getByRole("heading", { name: "Your wallet awaits." }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Wallet password", { exact: true })
+    .fill("incorrect-password");
+  await page
+    .getByRole("button", { name: "Unlock wallet", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(/Wrong.*password/);
+  await page.getByLabel("Wallet password", { exact: true }).fill(password);
+  await page
+    .getByRole("button", { name: "Unlock wallet", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Connected", exact: true }),
+  ).toBeVisible();
+  const after = await page.evaluate(() => chrome.storage.local.get("db"));
+  expect(after.db.wallets[0]).toEqual({
+    ...before.db.wallets[0],
+    publicKey: fixture.metadata.publicKey,
+  });
+  expect(after.db.wallets[0].encrypted).toBe(fixture.encrypted);
+  await page.getByRole("button", { name: "Lock wallet", exact: true }).click();
+  await page.getByLabel("Wallet password", { exact: true }).fill(password);
+  await page
+    .getByRole("button", { name: "Unlock wallet", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Connected", exact: true }),
+  ).toBeVisible();
+  await review(page);
+  await page.getByLabel("Confirm with your wallet password").fill(password);
+  await page.getByRole("button", { name: "Sign & send", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "On its way." }),
+  ).toBeVisible();
+  expect(extension.node.broadcasts).toHaveLength(1);
 });
 
 test("a spent coin blocks signing from an existing review", async ({

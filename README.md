@@ -6,7 +6,7 @@ Test RQT has no monetary value. An internal security review of this extension is
 
 ## Install
 
-1. Download `Requant-Wallet-Extension_0.5.0_chromium-testnet.zip` from this repository's Releases or [requant.network](https://requant.network/docs/wallet#download-wallet).
+1. Download `Requant-Wallet-Extension_0.5.4_chromium-testnet.zip` from this repository's Releases or [requant.network](https://requant.network/docs/wallet#download-wallet).
 2. Extract the ZIP to a permanent folder. Do not move or delete the folder while using the extension.
 3. Open `chrome://extensions` (Chrome), `edge://extensions` (Edge), or `brave://extensions` (Brave).
 4. Enable **Developer mode**, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
@@ -86,7 +86,8 @@ Chrome storage, the popup/full wallet, website provider/bridge and approval
 windows. Coverage includes HD backup recovery in a second profile, legacy imports,
 exact balances, wrong passwords, reviewed transfers, spent inputs, unknown
 broadcast reconciliation, site approval/rejection, navigation invalidation and
-service-worker restart. The website fixture uses the production manifest's
+service-worker restart, and full-wallet legacy import followed by popup unlock.
+The website fixture uses the production manifest's
 existing node-host permission and injects the shipped scripts through Chrome's
 real scripting API; Chrome's native optional-permission dialog is outside scope.
 
